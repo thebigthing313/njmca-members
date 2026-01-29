@@ -27,3 +27,6 @@ dist-ssr
 bun.lockb
 yarn.lock
 package.lock.json
+
+.env
+.env.*.local
