@@ -19,15 +19,30 @@ pnpm add @supabase/supabase-js @supabase/auth-ui-react @supabase/auth-ui-shared
 
 #### 1.2 Database Schema Design
 
-**Core Tables:**
+**Core Tables (from schema):**
 
-- `profiles` - Extended user information
-- `organizations` - Organization details
-- `memberships` - User-organization relationships
-- `roles` - Permission system
-- `announcements` - Organization communications
-- `events` - Calendar events
-- `documents` - File storage references
+- `profiles` — Extended user information
+- `organizations` — Organization details
+- `memberships` — User-organization relationships
+- `roles` — Role definitions for RBAC
+- `permissions` — Permission definitions for RBAC
+- `role_permissions` — Mapping roles to permissions
+- `committees` — Committee definitions
+- `committee_members` — User-committee relationships and roles
+- `events` — Event scheduling and management
+- `announcements` — Organization-wide announcements
+- `folders` — Document folder structure
+- `documents` — Document metadata and storage references
+- `document_versions` — Version history for documents
+
+**RBAC & Automation:**
+
+- Triggers in `500-rbac-functions.sql` keep `auth.users.raw_app_meta_data` in sync with profile, role, and committee membership changes.
+- RLS policies should use `(select auth.uid())` for user identification and always set `search_path = ''` in functions for security.
+
+**Schema Management:**
+
+- All SQL is lower case except `OLD`/`NEW` in triggers. Table/field names use snake_case. Privileged roles for private schema: `postgres`, `service_role`.
 
 ### **Phase 2: Core Member Features**
 
