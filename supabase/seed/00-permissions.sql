@@ -5,4 +5,6 @@ insert into public.permissions (id, name, description) values
 ('manage_own_events', 'Manage Own Events', 'Can create, update, and delete their own events only'),
 ('manage_own_announcements', 'Manage Own Announcements', 'Can create, update, and delete their own announcements only'),
 ('manage_committees', 'Manage Committees', 'Can update any committee chairs and members'),
-('manage_members', 'Manage Members', 'Can invite or remove members from the organization');
+('manage_members', 'Manage Members', 'Can invite or remove members from the organization'),
+('manage_organizations', 'Manage Organizations', 'Can update or delete organizations')
+;

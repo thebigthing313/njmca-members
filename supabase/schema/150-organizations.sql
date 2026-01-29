@@ -12,3 +12,30 @@ create table public.organizations(
     email text,
     website_url text
 );
+
+alter table public.organizations enable row level security;
+
+create policy "Authenticated can select organizations"
+on public.organizations
+for select
+to authenticated
+using (true);
+
+create policy "Authenticated can insert"
+on public.organizations
+for insert
+to authenticated
+with check (true);
+
+create policy "Permission manage_organizations to update"
+on public.organizations
+for update
+to authenticated
+using (public.has_permission('manage_organizations'))
+with check (public.has_permission('manage_organizations'));
+
+create policy "Permission manage_organizations to delete"
+on public.organizations
+for delete
+to authenticated
+using (public.has_permission('manage_organizations'));

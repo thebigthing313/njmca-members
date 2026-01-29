@@ -1,3 +1,213 @@
+create schema if not exists "private";
+
+set check_function_bodies = off;
+
+CREATE OR REPLACE FUNCTION private.update_user_app_metadata()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+declare
+    json_key text := TG_ARGV[0];
+    value_column text := TG_ARGV[1];
+    value jsonb;
+    user_id uuid;
+begin
+    if TG_OP = 'DELETE' then
+        user_id := OLD.user_id;
+        value := null;
+    else
+        user_id := NEW.user_id;
+        execute format('select to_jsonb($1.%I)', value_column) into value using NEW;
+    end if;
+    if user_id is not null then
+        update auth.users
+        set raw_app_meta_data = jsonb_set(
+            coalesce(auth.users.raw_app_meta_data, '{}'::jsonb),
+            array[json_key],
+            coalesce(value, 'null'::jsonb)
+        )
+        where id = user_id;
+    end if;
+    if TG_OP = 'DELETE' then
+        return OLD;
+    else
+        return NEW;
+    end if;
+end;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION private.update_user_app_metadata_value(p_user_id uuid, p_json_key text, p_value jsonb)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+begin
+    if p_user_id is not null then
+        update auth.users
+        set raw_app_meta_data = jsonb_set(
+            coalesce(auth.users.raw_app_meta_data, '{}'::jsonb),
+            array[p_json_key],
+            p_value
+        )
+        where id = p_user_id;
+    end if;
+end;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION private.update_user_committees_in_app_metadata()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+declare
+    committees jsonb;
+    user_id uuid;
+begin
+    if TG_OP = 'DELETE' then
+        select p.user_id into user_id from public.profiles p where p.id = OLD.profile_id;
+        if user_id is not null and exists (select 1 from auth.users where id = user_id) then
+            select jsonb_agg(row_to_json(c))
+            into committees
+            from (
+                select
+                    cm.committee_id,
+                    c.name as committee_name,
+                    cm.role as committee_role
+                from public.committee_members cm
+                join public.committees c on c.id = cm.committee_id
+                where cm.profile_id = OLD.profile_id
+            ) c;
+            perform private.update_user_app_metadata_value(
+                user_id,
+                'committee_memberships',
+                coalesce(committees, '[]'::jsonb)
+            );
+        end if;
+        return OLD;
+    else
+        select p.user_id into user_id from public.profiles p where p.id = NEW.profile_id;
+        if user_id is not null and exists (select 1 from auth.users where id = user_id) then
+            select jsonb_agg(row_to_json(c))
+            into committees
+            from (
+                select
+                    cm.committee_id,
+                    c.name as committee_name,
+                    cm.role as committee_role
+                from public.committee_members cm
+                join public.committees c on c.id = cm.committee_id
+                where cm.profile_id = NEW.profile_id
+            ) c;
+            perform private.update_user_app_metadata_value(
+                user_id,
+                'committee_memberships',
+                coalesce(committees, '[]'::jsonb)
+            );
+        end if;
+        return NEW;
+    end if;
+end;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION private.update_user_permissions_in_app_metadata()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+declare
+    permissions jsonb;
+    user_id uuid;
+    role_id uuid;
+begin
+    if TG_TABLE_NAME = 'profiles' then
+        if TG_OP = 'DELETE' then
+            user_id := OLD.user_id;
+            role_id := OLD.role_id;
+        else
+            user_id := NEW.user_id;
+            role_id := NEW.role_id;
+        end if;
+        if user_id is not null and role_id is not null then
+            select jsonb_agg(permission)
+            into permissions
+            from (
+                select p.name as permission
+                from public.role_permissions rp
+                join public.permissions p on p.id = rp.permission_id
+                where rp.role_id = role_id
+            ) sub;
+            perform private.update_user_app_metadata_value(
+                user_id,
+                'permissions',
+                coalesce(permissions, '[]'::jsonb)
+            );
+        end if;
+        if TG_OP = 'DELETE' then
+            return OLD;
+        else
+            return NEW;
+        end if;
+    elsif TG_TABLE_NAME = 'role_permissions' then
+        if TG_OP = 'DELETE' then
+            role_id := OLD.role_id;
+        else
+            role_id := NEW.role_id;
+        end if;
+        if role_id is not null then
+            for user_id in select user_id from public.profiles where role_id = role_id loop
+                select jsonb_agg(permission)
+                into permissions
+                from (
+                    select p.name as permission
+                    from public.role_permissions rp
+                    join public.permissions p on p.id = rp.permission_id
+                    where rp.role_id = role_id
+                ) sub;
+                perform private.update_user_app_metadata_value(
+                    user_id,
+                    'permissions',
+                    coalesce(permissions, '[]'::jsonb)
+                );
+            end loop;
+        end if;
+        if TG_OP = 'DELETE' then
+            return OLD;
+        else
+            return NEW;
+        end if;
+    elsif TG_TABLE_NAME = 'permissions' then
+        for role_id in select rp.role_id from public.role_permissions rp where rp.permission_id = coalesce(NEW.id, OLD.id) loop
+            for user_id in select user_id from public.profiles where role_id = role_id loop
+                select jsonb_agg(permission)
+                into permissions
+                from (
+                    select p.name as permission
+                    from public.role_permissions rp
+                    join public.permissions p on p.id = rp.permission_id
+                    where rp.role_id = role_id
+                ) sub;
+                perform private.update_user_app_metadata_value(
+                    user_id,
+                    'permissions',
+                    coalesce(permissions, '[]'::jsonb)
+                );
+            end loop;
+        end loop;
+        if TG_OP = 'DELETE' then
+            return OLD;
+        else
+            return NEW;
+        end if;
+    end if;
+end;
+$function$
+;
+
+
 create type "public"."committee_role" as enum ('member', 'chair');
 
 create type "public"."document_audience" as enum ('members', 'board_of_trustees', 'executive_committee');
@@ -124,6 +334,7 @@ create table "public"."profiles" (
     "updated_at" timestamp with time zone not null default now(),
     "first_name" text not null,
     "last_name" text not null,
+    "role_id" uuid,
     "email_address" text,
     "organization_id" uuid,
     "phone_number" text
@@ -141,13 +352,6 @@ create table "public"."roles" (
     "id" uuid not null default gen_random_uuid(),
     "name" text not null,
     "description" text,
-    "created_at" timestamp with time zone not null default now()
-);
-
-
-create table "public"."user_roles" (
-    "user_id" uuid not null,
-    "role_id" uuid not null,
     "created_at" timestamp with time zone not null default now()
 );
 
@@ -190,8 +394,6 @@ CREATE UNIQUE INDEX roles_name_key ON public.roles USING btree (name);
 
 CREATE UNIQUE INDEX roles_pkey ON public.roles USING btree (id);
 
-CREATE UNIQUE INDEX user_roles_pkey ON public.user_roles USING btree (user_id, role_id);
-
 alter table "public"."announcements" add constraint "announcements_pkey" PRIMARY KEY using index "announcements_pkey";
 
 alter table "public"."committee_members" add constraint "committee_members_pkey" PRIMARY KEY using index "committee_members_pkey";
@@ -217,8 +419,6 @@ alter table "public"."profiles" add constraint "profiles_pkey" PRIMARY KEY using
 alter table "public"."role_permissions" add constraint "role_permissions_pkey" PRIMARY KEY using index "role_permissions_pkey";
 
 alter table "public"."roles" add constraint "roles_pkey" PRIMARY KEY using index "roles_pkey";
-
-alter table "public"."user_roles" add constraint "user_roles_pkey" PRIMARY KEY using index "user_roles_pkey";
 
 alter table "public"."announcements" add constraint "announcements_created_by_fkey" FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL not valid;
 
@@ -300,6 +500,10 @@ alter table "public"."profiles" add constraint "profiles_organization_id_fkey" F
 
 alter table "public"."profiles" validate constraint "profiles_organization_id_fkey";
 
+alter table "public"."profiles" add constraint "profiles_role_id_fkey" FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL not valid;
+
+alter table "public"."profiles" validate constraint "profiles_role_id_fkey";
+
 alter table "public"."profiles" add constraint "profiles_user_id_fkey" FOREIGN KEY (user_id) REFERENCES auth.users(id) not valid;
 
 alter table "public"."profiles" validate constraint "profiles_user_id_fkey";
@@ -315,14 +519,6 @@ alter table "public"."role_permissions" add constraint "role_permissions_role_id
 alter table "public"."role_permissions" validate constraint "role_permissions_role_id_fkey";
 
 alter table "public"."roles" add constraint "roles_name_key" UNIQUE using index "roles_name_key";
-
-alter table "public"."user_roles" add constraint "user_roles_role_id_fkey" FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE not valid;
-
-alter table "public"."user_roles" validate constraint "user_roles_role_id_fkey";
-
-alter table "public"."user_roles" add constraint "user_roles_user_id_fkey" FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE not valid;
-
-alter table "public"."user_roles" validate constraint "user_roles_user_id_fkey";
 
 grant delete on table "public"."announcements" to "anon";
 
@@ -870,46 +1066,16 @@ grant truncate on table "public"."roles" to "service_role";
 
 grant update on table "public"."roles" to "service_role";
 
-grant delete on table "public"."user_roles" to "anon";
+CREATE TRIGGER update_committees_in_app_metadata_trigger AFTER INSERT OR DELETE OR UPDATE ON public.committee_members FOR EACH ROW EXECUTE FUNCTION private.update_user_committees_in_app_metadata();
 
-grant insert on table "public"."user_roles" to "anon";
+CREATE TRIGGER update_permissions_in_app_metadata_on_permissions AFTER INSERT OR DELETE OR UPDATE ON public.permissions FOR EACH ROW EXECUTE FUNCTION private.update_user_permissions_in_app_metadata();
 
-grant references on table "public"."user_roles" to "anon";
+CREATE TRIGGER profile_id_to_app_metadata_trigger AFTER INSERT OR DELETE OR UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION private.update_user_app_metadata('profile_id', 'id');
 
-grant select on table "public"."user_roles" to "anon";
+CREATE TRIGGER role_id_to_app_metadata_trigger AFTER INSERT OR DELETE OR UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION private.update_user_app_metadata('role_id', 'role_id');
 
-grant trigger on table "public"."user_roles" to "anon";
+CREATE TRIGGER update_permissions_in_app_metadata_trigger AFTER INSERT OR DELETE OR UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION private.update_user_permissions_in_app_metadata();
 
-grant truncate on table "public"."user_roles" to "anon";
-
-grant update on table "public"."user_roles" to "anon";
-
-grant delete on table "public"."user_roles" to "authenticated";
-
-grant insert on table "public"."user_roles" to "authenticated";
-
-grant references on table "public"."user_roles" to "authenticated";
-
-grant select on table "public"."user_roles" to "authenticated";
-
-grant trigger on table "public"."user_roles" to "authenticated";
-
-grant truncate on table "public"."user_roles" to "authenticated";
-
-grant update on table "public"."user_roles" to "authenticated";
-
-grant delete on table "public"."user_roles" to "service_role";
-
-grant insert on table "public"."user_roles" to "service_role";
-
-grant references on table "public"."user_roles" to "service_role";
-
-grant select on table "public"."user_roles" to "service_role";
-
-grant trigger on table "public"."user_roles" to "service_role";
-
-grant truncate on table "public"."user_roles" to "service_role";
-
-grant update on table "public"."user_roles" to "service_role";
+CREATE TRIGGER update_permissions_in_app_metadata_on_role_permissions AFTER INSERT OR DELETE OR UPDATE ON public.role_permissions FOR EACH ROW EXECUTE FUNCTION private.update_user_permissions_in_app_metadata();
 
 
