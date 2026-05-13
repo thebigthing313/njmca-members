@@ -34,3 +34,12 @@ create table if not exists audit_events (
   constraint audit_events_transaction_method_known
     check (transaction_method in ('manual', 'csv_import', 'seed', 'system'))
 );
+
+create table if not exists member_claims (
+  id text primary key,
+  member_id text not null references members(id),
+  email_normalized text not null,
+  expires_at timestamptz not null,
+  completed_at timestamptz,
+  created_at timestamptz not null default now()
+);

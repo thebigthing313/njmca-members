@@ -5,7 +5,7 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { devMemberFixtures } from '../domain/dev-fixtures';
@@ -79,6 +79,10 @@ function Login() {
               Use your NJMCA member account.
             </Typography>
           </Box>
+
+          <Button component={Link} to="/first-time-access" variant="text">
+            First-time access
+          </Button>
 
           <Stack spacing={2}>
             <TextField

@@ -34,4 +34,4 @@ Members portal for the New Jersey Mosquito Control Association.
 
 ## Demo
 
-The app has a protected `/portal` route. In development, `/login` includes fake `.test` member identities for testing active, inactive, missing-member, and email-mismatch access states without production impersonation.
+The app has a protected `/portal` route. In development, `/login` includes fake `.test` member identities for testing active, inactive, missing-member, and email-mismatch access states without production impersonation. `/first-time-access` starts the member claim flow for an active unlinked member; development OTPs are logged by the server until a production email provider is configured.

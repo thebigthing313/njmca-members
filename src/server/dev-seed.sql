@@ -33,6 +33,15 @@ insert into members (
     'old.email.test@njmca.test',
     'old.email.test@njmca.test',
     true
+  ),
+  (
+    'dev-member-claimable',
+    null,
+    'Casey',
+    'Claimable',
+    'casey.claimable@njmca.test',
+    'casey.claimable@njmca.test',
+    true
   )
 on conflict (id) do update set
   user_id = excluded.user_id,
