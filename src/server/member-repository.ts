@@ -49,6 +49,25 @@ export async function findMemberByUserId(
   };
 }
 
+export async function findEffectivePermissionKeysForMember(memberId: string) {
+  const result = await getDb().query<{ key: string }>(
+    `
+      select distinct permissions.key
+      from member_roles
+      join roles on roles.id = member_roles.role_id
+      join role_permissions on role_permissions.role_id = roles.id
+      join permissions on permissions.id = role_permissions.permission_id
+      where member_roles.member_id = $1
+        and (member_roles.starts_on is null or member_roles.starts_on <= current_date)
+        and (member_roles.ends_on is null or member_roles.ends_on >= current_date)
+      order by permissions.key
+    `,
+    [memberId],
+  );
+
+  return result.rows.map((row) => row.key);
+}
+
 export async function findMembersByNormalizedEmail(
   email: string,
 ): Promise<MemberRecord[]> {

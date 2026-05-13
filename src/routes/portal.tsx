@@ -1,11 +1,13 @@
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 
 import { getMemberDisplayName } from '../domain/member-access';
+import { hasPermission, permissionKeys } from '../domain/permissions';
 import { getCurrentMemberAccess } from '../lib/member-context';
 import { getClearDevMemberCookieHeader } from '../server/dev-member-bypass';
 
@@ -75,6 +77,12 @@ function Portal() {
             <Typography variant="subtitle2">Member email</Typography>
             <Typography>{access.member.email}</Typography>
           </Box>
+
+          {hasPermission(access.permissions, permissionKeys.manageMembers) ? (
+            <Link href="/admin/members" underline="hover">
+              Member administration
+            </Link>
+          ) : null}
 
           {import.meta.env.DEV ? (
             <Button

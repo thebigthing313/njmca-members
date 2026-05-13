@@ -26,7 +26,7 @@ export function resolveDevMemberAccess(cookieHeader: string | null) {
     return null;
   }
 
-  return resolveMemberAccess(fixture.user, fixture.member);
+  return resolveMemberAccess(fixture.user, fixture.member, fixture.permissions);
 }
 
 function readCookie(cookieHeader: string, name: string) {

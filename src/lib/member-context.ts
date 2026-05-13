@@ -7,7 +7,10 @@ import {
   resolveMemberAccess,
 } from '../domain/member-access';
 import { resolveDevMemberAccess } from '../server/dev-member-bypass';
-import { findMemberByUserId } from '../server/member-repository';
+import {
+  findEffectivePermissionKeysForMember,
+  findMemberByUserId,
+} from '../server/member-repository';
 import { auth } from './auth';
 
 export const getCurrentMemberAccess = createServerFn({ method: 'GET' }).handler(
@@ -22,8 +25,17 @@ export const getCurrentMemberAccess = createServerFn({ method: 'GET' }).handler(
     const session = await auth.api.getSession({ headers });
     const user = toAuthenticatedUser(session?.user ?? null);
     const member = user ? await findMemberByUserId(user.id) : null;
+    const access = resolveMemberAccess(user, member);
 
-    return resolveMemberAccess(user, member);
+    if (access.status !== 'active') {
+      return access;
+    }
+
+    const permissions = await findEffectivePermissionKeysForMember(
+      access.member.id,
+    );
+
+    return resolveMemberAccess(user, member, permissions);
   },
 );
 

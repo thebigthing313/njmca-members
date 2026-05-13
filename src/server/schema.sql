@@ -43,3 +43,37 @@ create table if not exists member_claims (
   completed_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+create table if not exists permissions (
+  id text primary key,
+  key text not null unique,
+  display_name text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists roles (
+  id text primary key,
+  key text not null unique,
+  display_name text not null,
+  assignment_mode text not null,
+  created_at timestamptz not null default now(),
+  constraint roles_assignment_mode_known
+    check (assignment_mode in ('single', 'multiple'))
+);
+
+create table if not exists role_permissions (
+  role_id text not null references roles(id),
+  permission_id text not null references permissions(id),
+  primary key (role_id, permission_id)
+);
+
+create table if not exists member_roles (
+  id text primary key,
+  member_id text not null references members(id),
+  role_id text not null references roles(id),
+  starts_on date,
+  ends_on date,
+  created_at timestamptz not null default now(),
+  constraint member_roles_dates_ordered
+    check (starts_on is null or ends_on is null or starts_on <= ends_on)
+);

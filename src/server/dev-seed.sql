@@ -51,3 +51,46 @@ on conflict (id) do update set
   email_normalized = excluded.email_normalized,
   is_active = excluded.is_active,
   updated_at = now();
+
+insert into permissions (id, key, display_name) values
+  ('permission-manage-members', 'manage_members', 'Manage members'),
+  (
+    'permission-manage-organizations',
+    'manage_organizations',
+    'Manage organizations'
+  ),
+  ('permission-manage-roles', 'manage_roles', 'Manage roles')
+on conflict (id) do update set
+  key = excluded.key,
+  display_name = excluded.display_name;
+
+insert into roles (id, key, display_name, assignment_mode) values
+  ('role-webmaster', 'webmaster', 'Webmaster', 'multiple'),
+  ('role-president', 'president', 'President', 'single'),
+  ('role-secretary', 'secretary', 'Secretary', 'single'),
+  ('role-trustee', 'trustee', 'Trustee', 'multiple')
+on conflict (id) do update set
+  key = excluded.key,
+  display_name = excluded.display_name,
+  assignment_mode = excluded.assignment_mode;
+
+insert into role_permissions (role_id, permission_id) values
+  ('role-webmaster', 'permission-manage-members'),
+  ('role-webmaster', 'permission-manage-organizations'),
+  ('role-webmaster', 'permission-manage-roles'),
+  ('role-secretary', 'permission-manage-members')
+on conflict (role_id, permission_id) do nothing;
+
+insert into member_roles (id, member_id, role_id, starts_on, ends_on) values
+  (
+    'member-role-active-webmaster',
+    'dev-member-active',
+    'role-webmaster',
+    null,
+    null
+  )
+on conflict (id) do update set
+  member_id = excluded.member_id,
+  role_id = excluded.role_id,
+  starts_on = excluded.starts_on,
+  ends_on = excluded.ends_on;

@@ -40,6 +40,7 @@ export type MemberAccess =
 export function resolveMemberAccess(
   user: AuthenticatedUser | null,
   member: MemberRecord | null,
+  permissions: string[] = [],
 ): MemberAccess {
   if (!user) {
     return { status: 'unauthenticated' };
@@ -64,7 +65,7 @@ export function resolveMemberAccess(
     return { status: 'blocked', reason: 'email_mismatch', user, member };
   }
 
-  return { status: 'active', user, member, permissions: [] };
+  return { status: 'active', user, member, permissions };
 }
 
 export function getMemberDisplayName(member: MemberRecord) {

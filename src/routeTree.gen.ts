@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ForbiddenRouteImport } from './routes/forbidden'
 import { Route as FirstTimeAccessRouteImport } from './routes/first-time-access'
 import { Route as AccessBlockedRouteImport } from './routes/access-blocked'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiHelloRouteImport } from './routes/api.hello'
+import { Route as AdminMembersRouteImport } from './routes/admin/members'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const PortalRoute = PortalRouteImport.update({
@@ -31,6 +33,11 @@ const LoginRoute = LoginRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForbiddenRoute = ForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FirstTimeAccessRoute = FirstTimeAccessRouteImport.update({
@@ -53,6 +60,11 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
   path: '/api/hello',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminMembersRoute = AdminMembersRouteImport.update({
+  id: '/admin/members',
+  path: '/admin/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -63,9 +75,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/access-blocked': typeof AccessBlockedRoute
   '/first-time-access': typeof FirstTimeAccessRoute
+  '/forbidden': typeof ForbiddenRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/hello': typeof ApiHelloRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -73,9 +87,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/access-blocked': typeof AccessBlockedRoute
   '/first-time-access': typeof FirstTimeAccessRoute
+  '/forbidden': typeof ForbiddenRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/hello': typeof ApiHelloRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -84,9 +100,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/access-blocked': typeof AccessBlockedRoute
   '/first-time-access': typeof FirstTimeAccessRoute
+  '/forbidden': typeof ForbiddenRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/hello': typeof ApiHelloRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -96,9 +114,11 @@ export interface FileRouteTypes {
     | '/'
     | '/access-blocked'
     | '/first-time-access'
+    | '/forbidden'
     | '/forgot-password'
     | '/login'
     | '/portal'
+    | '/admin/members'
     | '/api/hello'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -106,9 +126,11 @@ export interface FileRouteTypes {
     | '/'
     | '/access-blocked'
     | '/first-time-access'
+    | '/forbidden'
     | '/forgot-password'
     | '/login'
     | '/portal'
+    | '/admin/members'
     | '/api/hello'
     | '/api/auth/$'
   id:
@@ -116,9 +138,11 @@ export interface FileRouteTypes {
     | '/'
     | '/access-blocked'
     | '/first-time-access'
+    | '/forbidden'
     | '/forgot-password'
     | '/login'
     | '/portal'
+    | '/admin/members'
     | '/api/hello'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -127,9 +151,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccessBlockedRoute: typeof AccessBlockedRoute
   FirstTimeAccessRoute: typeof FirstTimeAccessRoute
+  ForbiddenRoute: typeof ForbiddenRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
+  AdminMembersRoute: typeof AdminMembersRoute
   ApiHelloRoute: typeof ApiHelloRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -155,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forbidden': {
+      id: '/forbidden'
+      path: '/forbidden'
+      fullPath: '/forbidden'
+      preLoaderRoute: typeof ForbiddenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/first-time-access': {
@@ -185,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHelloRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/members': {
+      id: '/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AdminMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -199,9 +239,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccessBlockedRoute: AccessBlockedRoute,
   FirstTimeAccessRoute: FirstTimeAccessRoute,
+  ForbiddenRoute: ForbiddenRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
+  AdminMembersRoute: AdminMembersRoute,
   ApiHelloRoute: ApiHelloRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

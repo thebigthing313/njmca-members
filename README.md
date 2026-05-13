@@ -36,4 +36,4 @@ Members portal for the New Jersey Mosquito Control Association.
 
 ## Demo
 
-The app has a protected `/portal` route. In development, `/login` includes fake `.test` member identities for testing active, inactive, missing-member, and email-mismatch access states without production impersonation. `/first-time-access` starts the member claim flow for an active unlinked member, and `/forgot-password` handles OTP-based password reset. Development OTPs are logged by the server; production OTPs are delivered through Resend using `RESEND_API_KEY` and `NJMCA_OTP_FROM_EMAIL`.
+The app has a protected `/portal` route. In development, `/login` includes fake `.test` member identities for testing active, inactive, missing-member, and email-mismatch access states without production impersonation. `/first-time-access` starts the member claim flow for an active unlinked member, and `/forgot-password` handles OTP-based password reset. Development OTPs are logged by the server; production OTPs are delivered through Resend using `RESEND_API_KEY` and `NJMCA_OTP_FROM_EMAIL`. The first admin tracer is `/admin/members`, guarded by the `manage_members` permission.

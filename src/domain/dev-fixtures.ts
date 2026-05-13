@@ -1,11 +1,13 @@
 import type { AuthenticatedUser, MemberRecord } from './member-access';
 import { normalizeEmail } from './normalization';
+import { permissionKeys } from './permissions';
 
 export type DevMemberFixture = {
   key: string;
   label: string;
   user: AuthenticatedUser;
   member: MemberRecord | null;
+  permissions?: string[];
 };
 
 const activeEmail = 'active.member.test@njmca.test';
@@ -31,6 +33,11 @@ export const devMemberFixtures: DevMemberFixture[] = [
       emailNormalized: normalizeEmail(activeEmail),
       isActive: true,
     },
+    permissions: [
+      permissionKeys.manageMembers,
+      permissionKeys.manageOrganizations,
+      permissionKeys.manageRoles,
+    ],
   },
   {
     key: 'inactive-member',
