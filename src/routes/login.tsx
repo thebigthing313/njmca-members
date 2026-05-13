@@ -102,6 +102,9 @@ function Login() {
             <Button onClick={signIn} type="button" variant="contained">
               Sign in
             </Button>
+            <Button component={Link} to="/forgot-password" variant="text">
+              Forgot password
+            </Button>
           </Stack>
 
           {import.meta.env.DEV ? (

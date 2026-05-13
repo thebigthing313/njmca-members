@@ -8,6 +8,14 @@ type AuthClientResult = Promise<{
 }>;
 
 type AuthClient = {
+  emailOtp: {
+    requestPasswordReset: (input: { email: string }) => AuthClientResult;
+    resetPassword: (input: {
+      email: string;
+      otp: string;
+      password: string;
+    }) => AuthClientResult;
+  };
   signIn: {
     email: (input: {
       email: string;

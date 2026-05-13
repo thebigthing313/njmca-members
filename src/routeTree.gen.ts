@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FirstTimeAccessRouteImport } from './routes/first-time-access'
 import { Route as AccessBlockedRouteImport } from './routes/access-blocked'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,6 +26,11 @@ const PortalRoute = PortalRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FirstTimeAccessRoute = FirstTimeAccessRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/access-blocked': typeof AccessBlockedRoute
   '/first-time-access': typeof FirstTimeAccessRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/api/hello': typeof ApiHelloRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/access-blocked': typeof AccessBlockedRoute
   '/first-time-access': typeof FirstTimeAccessRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/api/hello': typeof ApiHelloRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/access-blocked': typeof AccessBlockedRoute
   '/first-time-access': typeof FirstTimeAccessRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/api/hello': typeof ApiHelloRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/access-blocked'
     | '/first-time-access'
+    | '/forgot-password'
     | '/login'
     | '/portal'
     | '/api/hello'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/access-blocked'
     | '/first-time-access'
+    | '/forgot-password'
     | '/login'
     | '/portal'
     | '/api/hello'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/access-blocked'
     | '/first-time-access'
+    | '/forgot-password'
     | '/login'
     | '/portal'
     | '/api/hello'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccessBlockedRoute: typeof AccessBlockedRoute
   FirstTimeAccessRoute: typeof FirstTimeAccessRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
   ApiHelloRoute: typeof ApiHelloRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/first-time-access': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccessBlockedRoute: AccessBlockedRoute,
   FirstTimeAccessRoute: FirstTimeAccessRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
   ApiHelloRoute: ApiHelloRoute,
