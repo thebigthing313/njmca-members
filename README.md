@@ -18,10 +18,12 @@ Members portal for the New Jersey Mosquito Control Association.
    pnpm install
    ```
 
-2. Copy `.env.example` to `.env.local` and add your Railway Postgres connection string when database work begins.
+2. Copy `.env.example` to `.env.local` and add your Railway Postgres connection string and Better Auth secret.
 
    ```bash
    DATABASE_URL=
+   BETTER_AUTH_SECRET=
+   BETTER_AUTH_URL=http://127.0.0.1:4280
    ```
 
 3. Start the dev server.
@@ -32,4 +34,4 @@ Members portal for the New Jersey Mosquito Control Association.
 
 ## Demo
 
-The current app is a TanStack Start hello-world page with a server-backed click counter and a small `/api/hello` route.
+The app has a protected `/portal` route. In development, `/login` includes fake `.test` member identities for testing active, inactive, missing-member, and email-mismatch access states without production impersonation.

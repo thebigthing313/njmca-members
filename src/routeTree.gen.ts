@@ -9,9 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PortalRouteImport } from './routes/portal'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AccessBlockedRouteImport } from './routes/access-blocked'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiHelloRouteImport } from './routes/api.hello'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessBlockedRoute = AccessBlockedRouteImport.update({
+  id: '/access-blocked',
+  path: '/access-blocked',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -22,35 +41,96 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
   path: '/api/hello',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/access-blocked': typeof AccessBlockedRoute
+  '/login': typeof LoginRoute
+  '/portal': typeof PortalRoute
   '/api/hello': typeof ApiHelloRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/access-blocked': typeof AccessBlockedRoute
+  '/login': typeof LoginRoute
+  '/portal': typeof PortalRoute
   '/api/hello': typeof ApiHelloRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/access-blocked': typeof AccessBlockedRoute
+  '/login': typeof LoginRoute
+  '/portal': typeof PortalRoute
   '/api/hello': typeof ApiHelloRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/hello'
+  fullPaths:
+    | '/'
+    | '/access-blocked'
+    | '/login'
+    | '/portal'
+    | '/api/hello'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/hello'
-  id: '__root__' | '/' | '/api/hello'
+  to:
+    | '/'
+    | '/access-blocked'
+    | '/login'
+    | '/portal'
+    | '/api/hello'
+    | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/access-blocked'
+    | '/login'
+    | '/portal'
+    | '/api/hello'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccessBlockedRoute: typeof AccessBlockedRoute
+  LoginRoute: typeof LoginRoute
+  PortalRoute: typeof PortalRoute
   ApiHelloRoute: typeof ApiHelloRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/access-blocked': {
+      id: '/access-blocked'
+      path: '/access-blocked'
+      fullPath: '/access-blocked'
+      preLoaderRoute: typeof AccessBlockedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,12 +145,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHelloRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccessBlockedRoute: AccessBlockedRoute,
+  LoginRoute: LoginRoute,
+  PortalRoute: PortalRoute,
   ApiHelloRoute: ApiHelloRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
