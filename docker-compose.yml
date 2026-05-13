@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: njmca-members-postgres
+    environment:
+      POSTGRES_DB: njmca_members
+      POSTGRES_PASSWORD: njmca_members
+      POSTGRES_USER: njmca_members
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U njmca_members -d njmca_members"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "54329:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

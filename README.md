@@ -18,23 +18,39 @@ Members portal for the New Jersey Mosquito Control Association.
    pnpm install
    ```
 
-2. Copy `.env.example` to `.env.local` and add your Railway Postgres connection string and Better Auth secret.
+2. Start local Postgres and create local environment variables.
 
    ```bash
-   DATABASE_URL=
-   BETTER_AUTH_SECRET=
-   BETTER_AUTH_URL=http://127.0.0.1:4280
-   RESEND_API_KEY=
-   NJMCA_OTP_FROM_EMAIL="NJMCA Members <members@example.org>"
-   NJMCA_EMAIL_DELIVERY=console
-   RESEND_TEST_RECIPIENT=delivered@resend.dev
+   pnpm db:local:up
+   cp .env.local.example .env.local
    ```
 
-3. Start the dev server.
+   Keep `DATABASE_URL` pointed at `127.0.0.1:54329` for local development so migrations are exercised locally before Railway.
+
+3. Apply local schemas and seed data.
+
+   ```bash
+   pnpm db:local:migrate
+   ```
+
+   This runs the Better Auth CLI migration against local Postgres, then resets and seeds the app-owned member, role, permission, claim, and audit tables.
+
+4. Start the dev server.
 
    ```bash
    pnpm dev
    ```
+
+## Database Workflow
+
+- `pnpm db:local:up`: start local Postgres with Docker Compose.
+- `pnpm db:local:migrate`: apply Better Auth tables, reset app-owned tables, and seed development data.
+- `pnpm db:app:migrate`: apply only app-owned schema.
+- `pnpm db:app:seed`: apply only app-owned development seed data.
+- `pnpm db:app:reset`: drop and recreate app-owned tables. This refuses to run unless `DATABASE_URL` points at localhost.
+- `pnpm db:local:destroy`: stop local Postgres and delete its Docker volume.
+
+Do not point `.env.local` at Railway while using reset commands. Use Railway only after local schema and flow testing passes.
 
 ## Demo
 
