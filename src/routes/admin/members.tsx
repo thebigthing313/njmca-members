@@ -2,6 +2,8 @@ import AddIcon from '@mui/icons-material/Add';
 import BlockIcon from '@mui/icons-material/Block';
 import EditIcon from '@mui/icons-material/Edit';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
+import PreviewIcon from '@mui/icons-material/Preview';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -32,8 +34,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { AppError } from '../../domain/app-result';
 import { getMemberDisplayName } from '../../domain/member-access';
+import {
+  getCsvHeadersFromText,
+  guessCsvMemberImportMapping,
+  type CsvMemberImportMapping,
+  type CsvMemberImportOrganizationMode,
+  type CsvMemberImportPreview,
+} from '../../domain/member-import-preview';
 import { type ManagedMember } from '../../domain/member-management';
 import { hasPermission, permissionKeys } from '../../domain/permissions';
+import { previewMemberCsvImportAction } from '../../lib/member-import';
 import { getCurrentMemberAccess } from '../../lib/member-context';
 import {
   createMember,
@@ -326,6 +336,8 @@ function MembersAdmin() {
           </TableContainer>
         ) : null}
 
+        {canManageMembers ? <CsvImportPreviewPanel /> : null}
+
         {canManageRoles ? <RoleAssignmentManager /> : null}
       </Stack>
 
@@ -351,6 +363,360 @@ type RoleAssignmentAdminData = {
   roles: RoleAssignmentAdminRole[];
   assignments: RoleAssignmentAdminRecord[];
 };
+
+type MappingField = keyof CsvMemberImportMapping;
+
+const mappingFields: Array<{
+  key: MappingField;
+  label: string;
+}> = [
+  { key: 'firstName', label: 'First name' },
+  { key: 'lastName', label: 'Last name' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'organization', label: 'Organization' },
+  { key: 'title', label: 'Affiliation title' },
+];
+
+function CsvImportPreviewPanel() {
+  const [csvText, setCsvText] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [mapping, setMapping] = useState<CsvMemberImportMapping>({});
+  const [organizationModeType, setOrganizationModeType] =
+    useState<CsvMemberImportOrganizationMode['type']>('column');
+  const [fixedOrganizationName, setFixedOrganizationName] = useState('');
+  const [preview, setPreview] = useState<CsvMemberImportPreview | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [isBusy, setIsBusy] = useState(false);
+
+  async function loadFile(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    const text = await file.text();
+    const headerResult = getCsvHeadersFromText(text);
+
+    setCsvText(text);
+    setFileName(file.name);
+    setPreview(null);
+    setMessage(null);
+    setFieldErrors({});
+
+    if (!headerResult.ok) {
+      setHeaders([]);
+      setMapping({});
+      setMessage(headerResult.error.message);
+      return;
+    }
+
+    const guessedMapping = guessCsvMemberImportMapping(headerResult.data);
+
+    setHeaders(headerResult.data);
+    setMapping(guessedMapping);
+    setOrganizationModeType(guessedMapping.organization ? 'column' : 'fixed');
+  }
+
+  async function previewImport() {
+    setIsBusy(true);
+    setPreview(null);
+    setMessage(null);
+    setFieldErrors({});
+
+    const organizationMode: CsvMemberImportOrganizationMode =
+      organizationModeType === 'fixed'
+        ? { type: 'fixed', organizationName: fixedOrganizationName }
+        : organizationModeType === 'column'
+          ? { type: 'column' }
+          : { type: 'none' };
+
+    const result = await previewMemberCsvImportAction({
+      data: {
+        csvText,
+        mapping,
+        organizationMode,
+      },
+    });
+
+    setIsBusy(false);
+
+    if (!result.ok) {
+      setMessage(result.error.message);
+      setFieldErrors(result.error.fieldErrors ?? {});
+      return;
+    }
+
+    setPreview(result.data);
+  }
+
+  return (
+    <Paper
+      component="section"
+      elevation={0}
+      sx={{ border: 1, borderColor: 'divider', borderRadius: 2, p: 3 }}
+    >
+      <Stack spacing={3}>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          justifyContent="space-between"
+          spacing={2}
+          sx={{ alignItems: { md: 'center' } }}
+        >
+          <Box>
+            <Typography component="h2" variant="h5">
+              CSV import preview
+            </Typography>
+            <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+              Stage member and organization changes before commit.
+            </Typography>
+          </Box>
+          <Button
+            component="label"
+            startIcon={<UploadFileIcon />}
+            variant="outlined"
+          >
+            Choose CSV
+            <input
+              accept=".csv,text/csv"
+              hidden
+              onChange={(event) => void loadFile(event.target.files?.[0])}
+              type="file"
+            />
+          </Button>
+        </Stack>
+
+        {fileName ? (
+          <Typography color="text.secondary" variant="body2">
+            {fileName}
+          </Typography>
+        ) : null}
+
+        {message ? (
+          <Alert onClose={() => setMessage(null)} severity="warning">
+            {message}
+          </Alert>
+        ) : null}
+
+        {headers.length > 0 ? (
+          <>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={2}
+              sx={{ alignItems: { md: 'center' } }}
+            >
+              <TextField
+                label="Organization mode"
+                onChange={(event) =>
+                  setOrganizationModeType(
+                    event.target
+                      .value as CsvMemberImportOrganizationMode['type'],
+                  )
+                }
+                select
+                value={organizationModeType}
+              >
+                <MenuItem value="column">Column</MenuItem>
+                <MenuItem value="fixed">Fixed</MenuItem>
+                <MenuItem value="none">None</MenuItem>
+              </TextField>
+              {organizationModeType === 'fixed' ? (
+                <TextField
+                  error={Boolean(fieldErrors.organizationName)}
+                  fullWidth
+                  helperText={fieldErrors.organizationName}
+                  label="Fixed organization"
+                  onChange={(event) =>
+                    setFixedOrganizationName(event.target.value)
+                  }
+                  value={fixedOrganizationName}
+                />
+              ) : null}
+            </Stack>
+
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, minmax(0, 1fr))',
+                  lg: 'repeat(3, minmax(0, 1fr))',
+                },
+              }}
+            >
+              {mappingFields.map((field) => (
+                <CsvMappingSelect
+                  error={fieldErrors[field.key]}
+                  headers={headers}
+                  key={field.key}
+                  label={field.label}
+                  onChange={(value) =>
+                    setMapping((current) => ({
+                      ...current,
+                      [field.key]: value || null,
+                    }))
+                  }
+                  value={mapping[field.key] ?? ''}
+                />
+              ))}
+            </Box>
+
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <Button
+                disabled={isBusy}
+                onClick={() => void previewImport()}
+                startIcon={<PreviewIcon />}
+                variant="contained"
+              >
+                Preview import
+              </Button>
+            </Stack>
+          </>
+        ) : null}
+
+        {preview ? <CsvImportPreviewResult preview={preview} /> : null}
+      </Stack>
+    </Paper>
+  );
+}
+
+function CsvMappingSelect(props: {
+  error?: string;
+  headers: string[];
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+}) {
+  return (
+    <TextField
+      error={Boolean(props.error)}
+      helperText={props.error}
+      label={props.label}
+      onChange={(event) => props.onChange(event.target.value)}
+      select
+      value={props.value}
+    >
+      <MenuItem value="">Not mapped</MenuItem>
+      {props.headers.map((header) => (
+        <MenuItem key={header} value={header}>
+          {header}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
+}
+
+function CsvImportPreviewResult(props: { preview: CsvMemberImportPreview }) {
+  const { preview } = props;
+
+  return (
+    <Stack spacing={2}>
+      <Divider />
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <Chip label={`${preview.summary.readyRows} ready`} color="success" />
+        <Chip label={`${preview.summary.blockedRows} blocked`} color="error" />
+        <Chip
+          label={`${preview.summary.reviewRows} review`}
+          color="warning"
+        />
+        <Chip
+          label={`${preview.summary.organizationsToCreate} new orgs`}
+          color="primary"
+          variant="outlined"
+        />
+      </Stack>
+
+      {preview.newOrganizations.length > 0 ? (
+        <Paper
+          component="section"
+          elevation={0}
+          sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2 }}
+        >
+          <Typography component="h3" variant="h6">
+            Staged organizations
+          </Typography>
+          <Stack spacing={0.5} sx={{ mt: 1 }}>
+            {preview.newOrganizations.map((organization) => (
+              <Typography key={organization.nameNormalized} variant="body2">
+                {organization.name} - rows {organization.rowNumbers.join(', ')}
+              </Typography>
+            ))}
+          </Stack>
+        </Paper>
+      ) : null}
+
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
+      >
+        <Table aria-label="CSV import preview" size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Row</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Action</TableCell>
+              <TableCell>Member</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Organization</TableCell>
+              <TableCell>Messages</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {preview.rows.map((row) => (
+              <TableRow key={row.rowNumber}>
+                <TableCell>{row.rowNumber}</TableCell>
+                <TableCell>
+                  <Chip
+                    color={
+                      row.status === 'ready'
+                        ? 'success'
+                        : row.status === 'blocked'
+                          ? 'error'
+                          : 'warning'
+                    }
+                    label={formatPreviewStatus(row.status)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>{formatPreviewAction(row.action)}</TableCell>
+                <TableCell>
+                  {row.firstName} {row.lastName}
+                </TableCell>
+                <TableCell>{row.email ?? 'None'}</TableCell>
+                <TableCell>{row.organizationName ?? 'None'}</TableCell>
+                <TableCell>
+                  {row.messages.length > 0 ? row.messages.join(' ') : 'None'}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Stack>
+  );
+}
+
+function formatPreviewStatus(status: CsvMemberImportPreview['rows'][number]['status']) {
+  if (status === 'review_required') {
+    return 'Review';
+  }
+
+  return status[0].toUpperCase() + status.slice(1);
+}
+
+function formatPreviewAction(action: CsvMemberImportPreview['rows'][number]['action']) {
+  switch (action) {
+    case 'create_member':
+      return 'Create member';
+    case 'update_member':
+      return 'Update member';
+    case 'skip':
+      return 'Skip';
+  }
+}
 
 function RoleAssignmentManager() {
   const [data, setData] = useState<RoleAssignmentAdminData | null>(null);
