@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite dev --host 127.0.0.1 --port 4280 --strictPort",
+    "dev": "node scripts/dev/run-with-local-env.mjs vite dev --host 127.0.0.1 --port 4280 --strictPort",
     "build": "vite build",
     "db:app:migrate": "node scripts/db/apply-app-sql.mjs migrate",
     "db:app:reset": "node scripts/db/apply-app-sql.mjs reset",
@@ -18,7 +18,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc -b",
-    "preview": "vite preview --host 127.0.0.1 --port 4280"
+    "preview": "node scripts/dev/run-with-local-env.mjs vite preview --host 127.0.0.1 --port 4280"
   },
   "dependencies": {
     "@emotion/cache": "11.14.0",
