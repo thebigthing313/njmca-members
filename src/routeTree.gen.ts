@@ -17,6 +17,7 @@ import { Route as FirstTimeAccessRouteImport } from './routes/first-time-access'
 import { Route as AccessBlockedRouteImport } from './routes/access-blocked'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiHelloRouteImport } from './routes/api.hello'
+import { Route as AdminOrganizationsRouteImport } from './routes/admin/organizations'
 import { Route as AdminMembersRouteImport } from './routes/admin/members'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -60,6 +61,11 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
   path: '/api/hello',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminOrganizationsRoute = AdminOrganizationsRouteImport.update({
+  id: '/admin/organizations',
+  path: '/admin/organizations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminMembersRoute = AdminMembersRouteImport.update({
   id: '/admin/members',
   path: '/admin/members',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/admin/members': typeof AdminMembersRoute
+  '/admin/organizations': typeof AdminOrganizationsRoute
   '/api/hello': typeof ApiHelloRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/admin/members': typeof AdminMembersRoute
+  '/admin/organizations': typeof AdminOrganizationsRoute
   '/api/hello': typeof ApiHelloRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/admin/members': typeof AdminMembersRoute
+  '/admin/organizations': typeof AdminOrganizationsRoute
   '/api/hello': typeof ApiHelloRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/portal'
     | '/admin/members'
+    | '/admin/organizations'
     | '/api/hello'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/portal'
     | '/admin/members'
+    | '/admin/organizations'
     | '/api/hello'
     | '/api/auth/$'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/portal'
     | '/admin/members'
+    | '/admin/organizations'
     | '/api/hello'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
   AdminMembersRoute: typeof AdminMembersRoute
+  AdminOrganizationsRoute: typeof AdminOrganizationsRoute
   ApiHelloRoute: typeof ApiHelloRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -218,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHelloRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/organizations': {
+      id: '/admin/organizations'
+      path: '/admin/organizations'
+      fullPath: '/admin/organizations'
+      preLoaderRoute: typeof AdminOrganizationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/members': {
       id: '/admin/members'
       path: '/admin/members'
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
   AdminMembersRoute: AdminMembersRoute,
+  AdminOrganizationsRoute: AdminOrganizationsRoute,
   ApiHelloRoute: ApiHelloRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

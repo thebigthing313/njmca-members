@@ -5,7 +5,19 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { createFileRoute, Link } from '@tanstack/react-router';
 
+import { getCurrentMemberAccess } from '../lib/member-context';
+import { requireProtectedRouteAccess } from '../lib/protected-route-guard';
+
 export const Route = createFileRoute('/forbidden')({
+  beforeLoad: async ({ location }) => {
+    const access = await getCurrentMemberAccess();
+
+    return {
+      access: requireProtectedRouteAccess(access, {
+        currentHref: location.href,
+      }),
+    };
+  },
   component: Forbidden,
 });
 

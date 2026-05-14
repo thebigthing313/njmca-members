@@ -94,3 +94,36 @@ on conflict (id) do update set
   role_id = excluded.role_id,
   starts_on = excluded.starts_on,
   ends_on = excluded.ends_on;
+
+insert into organizations (id, name, name_normalized) values
+  (
+    'dev-organization-north-jersey-mca',
+    'North Jersey MCA',
+    'north jersey mca'
+  ),
+  (
+    'dev-organization-shore-builders',
+    'Shore Builders',
+    'shore builders'
+  )
+on conflict (id) do update set
+  name = excluded.name,
+  name_normalized = excluded.name_normalized,
+  updated_at = now();
+
+insert into organization_members (id, member_id, organization_id, title) values
+  (
+    'dev-organization-member-active-njmca',
+    'dev-member-active',
+    'dev-organization-north-jersey-mca',
+    'Delegate'
+  ),
+  (
+    'dev-organization-member-claimable-shore',
+    'dev-member-claimable',
+    'dev-organization-shore-builders',
+    null
+  )
+on conflict (member_id, organization_id) do update set
+  title = excluded.title,
+  updated_at = now();

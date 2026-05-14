@@ -4,32 +4,23 @@ import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import { getMemberDisplayName } from '../domain/member-access';
 import { hasPermission, permissionKeys } from '../domain/permissions';
 import { getCurrentMemberAccess } from '../lib/member-context';
+import { requireProtectedRouteAccess } from '../lib/protected-route-guard';
 import { getClearDevMemberCookieHeader } from '../server/dev-member-bypass';
 
 export const Route = createFileRoute('/portal')({
   beforeLoad: async ({ location }) => {
     const access = await getCurrentMemberAccess();
 
-    if (access.status === 'unauthenticated') {
-      throw redirect({
-        to: '/login',
-        search: { redirect: location.href },
-      });
-    }
-
-    if (access.status === 'blocked') {
-      throw redirect({
-        to: '/access-blocked',
-        search: { reason: access.reason },
-      });
-    }
-
-    return { access };
+    return {
+      access: requireProtectedRouteAccess(access, {
+        currentHref: location.href,
+      }),
+    };
   },
   component: Portal,
 });
@@ -81,6 +72,15 @@ function Portal() {
           {hasPermission(access.permissions, permissionKeys.manageMembers) ? (
             <Link href="/admin/members" underline="hover">
               Member administration
+            </Link>
+          ) : null}
+
+          {hasPermission(
+            access.permissions,
+            permissionKeys.manageOrganizations,
+          ) ? (
+            <Link href="/admin/organizations" underline="hover">
+              Organization administration
             </Link>
           ) : null}
 

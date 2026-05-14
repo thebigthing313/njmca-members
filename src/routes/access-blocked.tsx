@@ -5,7 +5,19 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { createFileRoute, Link } from '@tanstack/react-router';
 
+import { getCurrentMemberAccess } from '../lib/member-context';
+import { requireBlockedRouteAccess } from '../lib/protected-route-guard';
+
 export const Route = createFileRoute('/access-blocked')({
+  beforeLoad: async ({ location }) => {
+    const access = await getCurrentMemberAccess();
+
+    return {
+      access: requireBlockedRouteAccess(access, {
+        currentHref: location.href,
+      }),
+    };
+  },
   validateSearch: (search: Record<string, unknown>) => ({
     reason: typeof search.reason === 'string' ? search.reason : undefined,
   }),
@@ -13,7 +25,7 @@ export const Route = createFileRoute('/access-blocked')({
 });
 
 function AccessBlocked() {
-  const { reason } = Route.useSearch();
+  const { access } = Route.useRouteContext();
 
   return (
     <Box
@@ -48,8 +60,10 @@ function AccessBlocked() {
             </Typography>
           </Box>
 
-          {reason ? (
-            <Typography color="text.secondary">Reason: {reason}</Typography>
+          {access.reason ? (
+            <Typography color="text.secondary">
+              Reason: {access.reason}
+            </Typography>
           ) : null}
 
           <Button component={Link} to="/login" variant="contained">

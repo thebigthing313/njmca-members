@@ -35,6 +35,28 @@ create table if not exists audit_events (
     check (transaction_method in ('manual', 'csv_import', 'seed', 'system'))
 );
 
+create table if not exists organizations (
+  id text primary key,
+  name text not null,
+  name_normalized text not null unique,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint organizations_name_not_blank
+    check (length(btrim(name)) > 0),
+  constraint organizations_name_normalized_not_blank
+    check (length(btrim(name_normalized)) > 0)
+);
+
+create table if not exists organization_members (
+  id text primary key,
+  member_id text not null references members(id),
+  organization_id text not null references organizations(id),
+  title text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (member_id, organization_id)
+);
+
 create table if not exists member_claims (
   id text primary key,
   member_id text not null references members(id),

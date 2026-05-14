@@ -53,13 +53,23 @@ export async function findEffectivePermissionKeysForMember(memberId: string) {
   const result = await getDb().query<{ key: string }>(
     `
       select distinct permissions.key
-      from member_roles
+      from members
+      join member_roles on member_roles.member_id = members.id
       join roles on roles.id = member_roles.role_id
       join role_permissions on role_permissions.role_id = roles.id
       join permissions on permissions.id = role_permissions.permission_id
-      where member_roles.member_id = $1
-        and (member_roles.starts_on is null or member_roles.starts_on <= current_date)
-        and (member_roles.ends_on is null or member_roles.ends_on >= current_date)
+      where members.id = $1
+        and members.is_active = true
+        and members.user_id is not null
+        and members.email_normalized is not null
+        and (
+          member_roles.starts_on is null
+          or member_roles.starts_on <= (now() at time zone 'America/New_York')::date
+        )
+        and (
+          member_roles.ends_on is null
+          or member_roles.ends_on >= (now() at time zone 'America/New_York')::date
+        )
       order by permissions.key
     `,
     [memberId],
