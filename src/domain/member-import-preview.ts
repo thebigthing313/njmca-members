@@ -35,6 +35,7 @@ export type ExistingImportMember = {
   lastName: string;
   email: string | null;
   emailNormalized: string | null;
+  phone: string | null;
   isActive: boolean;
   organizationNames: readonly string[];
 };
@@ -68,6 +69,7 @@ export type CsvMemberImportPreviewRow = {
 };
 
 export type CsvMemberImportPreview = {
+  previewFingerprint: string;
   headers: string[];
   rows: CsvMemberImportPreviewRow[];
   newOrganizations: {
@@ -162,7 +164,7 @@ export function previewMemberCsvImport(
   const rows = buildPreviewRows(input, parsed.data, referenceData);
   const newOrganizations = findNewOrganizations(rows, referenceData);
 
-  return appSuccess({
+  const preview = {
     headers: parsed.data.headers,
     rows,
     newOrganizations,
@@ -180,7 +182,18 @@ export function previewMemberCsvImport(
       ).length,
       organizationsToCreate: newOrganizations.length,
     },
+  };
+
+  return appSuccess({
+    previewFingerprint: createCsvMemberImportPreviewFingerprint(preview),
+    ...preview,
   });
+}
+
+export function createCsvMemberImportPreviewFingerprint(
+  preview: Omit<CsvMemberImportPreview, 'previewFingerprint'>,
+) {
+  return hashString(stableStringify(preview));
 }
 
 function buildPreviewRows(
@@ -528,4 +541,30 @@ function normalizeHeader(header: string) {
 
 function normalizeNameKey(firstName: string, lastName: string) {
   return `${firstName.trim().toLowerCase()} ${lastName.trim().toLowerCase()}`;
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    return `{${Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${stableStringify(entry)}`)
+      .join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+function hashString(value: string) {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(16).padStart(8, '0');
 }

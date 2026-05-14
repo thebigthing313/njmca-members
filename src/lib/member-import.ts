@@ -2,6 +2,10 @@ import { createServerFn } from '@tanstack/react-start';
 
 import { appError, unexpectedError } from '../domain/app-result';
 import {
+  commitMemberCsvImport,
+  type CommitMemberCsvImportInput,
+} from '../domain/member-import-commit';
+import {
   previewMemberCsvImport,
   type PreviewMemberCsvImportInput,
 } from '../domain/member-import-preview';
@@ -27,6 +31,30 @@ export const previewMemberCsvImportAction = createServerFn({ method: 'POST' })
       );
     } catch {
       return unexpectedError('CSV import preview could not be generated.');
+    }
+  });
+
+export const commitMemberCsvImportAction = createServerFn({ method: 'POST' })
+  .inputValidator((input: CommitMemberCsvImportInput) => input)
+  .handler(async ({ data }) => {
+    const actor = await requireMemberImportPreviewAccess();
+
+    if (!actor.ok) {
+      return actor;
+    }
+
+    try {
+      const { postgresMemberCsvImportCommitGateway } = await import(
+        '../server/member-import-repository'
+      );
+
+      return commitMemberCsvImport(
+        actor.data,
+        data,
+        postgresMemberCsvImportCommitGateway,
+      );
+    } catch {
+      return unexpectedError('CSV import could not be committed.');
     }
   });
 

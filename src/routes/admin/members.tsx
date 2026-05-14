@@ -43,7 +43,10 @@ import {
 } from '../../domain/member-import-preview';
 import { type ManagedMember } from '../../domain/member-management';
 import { hasPermission, permissionKeys } from '../../domain/permissions';
-import { previewMemberCsvImportAction } from '../../lib/member-import';
+import {
+  commitMemberCsvImportAction,
+  previewMemberCsvImportAction,
+} from '../../lib/member-import';
 import { getCurrentMemberAccess } from '../../lib/member-context';
 import {
   createMember,
@@ -336,7 +339,9 @@ function MembersAdmin() {
           </TableContainer>
         ) : null}
 
-        {canManageMembers ? <CsvImportPreviewPanel /> : null}
+        {canManageMembers ? (
+          <CsvImportPreviewPanel onCommitted={refreshMembers} />
+        ) : null}
 
         {canManageRoles ? <RoleAssignmentManager /> : null}
       </Stack>
@@ -378,7 +383,7 @@ const mappingFields: Array<{
   { key: 'title', label: 'Affiliation title' },
 ];
 
-function CsvImportPreviewPanel() {
+function CsvImportPreviewPanel(props: { onCommitted: () => Promise<void> }) {
   const [csvText, setCsvText] = useState('');
   const [fileName, setFileName] = useState('');
   const [headers, setHeaders] = useState<string[]>([]);
@@ -449,6 +454,46 @@ function CsvImportPreviewPanel() {
     }
 
     setPreview(result.data);
+  }
+
+  async function commitImport() {
+    if (!preview) {
+      return;
+    }
+
+    setIsBusy(true);
+    setMessage(null);
+    setFieldErrors({});
+
+    const organizationMode: CsvMemberImportOrganizationMode =
+      organizationModeType === 'fixed'
+        ? { type: 'fixed', organizationName: fixedOrganizationName }
+        : organizationModeType === 'column'
+          ? { type: 'column' }
+          : { type: 'none' };
+    const result = await commitMemberCsvImportAction({
+      data: {
+        csvText,
+        mapping,
+        organizationMode,
+        expectedPreviewFingerprint: preview.previewFingerprint,
+        confirmed: true,
+      },
+    });
+
+    setIsBusy(false);
+
+    if (!result.ok) {
+      setMessage(result.error.message);
+      setFieldErrors(result.error.fieldErrors ?? {});
+      return;
+    }
+
+    setMessage(
+      `Import committed: ${result.data.membersCreated} created, ${result.data.membersUpdated} updated, ${result.data.organizationsCreated} organizations created.`,
+    );
+    setPreview(null);
+    await props.onCommitted();
   }
 
   return (
@@ -576,7 +621,13 @@ function CsvImportPreviewPanel() {
           </>
         ) : null}
 
-        {preview ? <CsvImportPreviewResult preview={preview} /> : null}
+        {preview ? (
+          <CsvImportPreviewResult
+            isBusy={isBusy}
+            onCommit={() => void commitImport()}
+            preview={preview}
+          />
+        ) : null}
       </Stack>
     </Paper>
   );
@@ -608,8 +659,16 @@ function CsvMappingSelect(props: {
   );
 }
 
-function CsvImportPreviewResult(props: { preview: CsvMemberImportPreview }) {
-  const { preview } = props;
+function CsvImportPreviewResult(props: {
+  isBusy: boolean;
+  onCommit: () => void;
+  preview: CsvMemberImportPreview;
+}) {
+  const { isBusy, onCommit, preview } = props;
+  const canCommit =
+    preview.summary.readyRows > 0 &&
+    preview.summary.blockedRows === 0 &&
+    preview.summary.reviewRows === 0;
 
   return (
     <Stack spacing={2}>
@@ -646,6 +705,21 @@ function CsvImportPreviewResult(props: { preview: CsvMemberImportPreview }) {
           </Stack>
         </Paper>
       ) : null}
+
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+        <Button
+          disabled={!canCommit || isBusy}
+          onClick={onCommit}
+          variant="contained"
+        >
+          Commit import
+        </Button>
+        {!canCommit ? (
+          <Typography color="text.secondary" variant="body2">
+            Resolve blocked and review-required rows before committing.
+          </Typography>
+        ) : null}
+      </Stack>
 
       <TableContainer
         component={Paper}
