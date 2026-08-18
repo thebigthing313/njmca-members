@@ -78,6 +78,25 @@ supports TypeScript 7.1
 ([typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)),
 which waits on that `unstable/*` API settling into a stable one.
 
+## React Compiler
+
+The [React Compiler](https://react.dev/learn/react-compiler) runs over every
+component as a Babel pass configured in `vite.config.ts`, so memoisation is
+automatic. Do not reach for `useMemo` or `useCallback` to hold down render cost —
+the compiler already does that, and hand-tuned memoisation is the kind that rots.
+
+Two things worth knowing:
+
+- It applies to the client build only, which is where re-render cost lives.
+  Server rendering is single-pass, so nothing is memoised there.
+- A component the compiler cannot prove safe is skipped, not broken, so a Rules
+  of React violation costs optimisation silently. `eslint-plugin-react-hooks`
+  reports those same violations at lint time, which is the early warning.
+
+The memoisation still in the tree is there for referential stability — an effect
+dependency whose identity must not change between renders — rather than for
+render cost, and each remaining site says so in a comment.
+
 ## Contributing
 
 Every change follows the same loop: plan, open a GitHub issue, branch off `main`,

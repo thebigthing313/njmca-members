@@ -12,7 +12,7 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { getMemberDisplayName } from '../../domain/member-access';
@@ -64,13 +64,10 @@ function OrganizationsAdmin() {
 
   const data = adminData.ok ? adminData.data : null;
 
-  const selectedMember = useMemo(() => {
-    return (
-      data?.members.find((member) => member.id === selectedMemberId) ??
-      data?.members[0] ??
-      null
-    );
-  }, [data?.members, selectedMemberId]);
+  const selectedMember =
+    data?.members.find((member) => member.id === selectedMemberId) ??
+    data?.members[0] ??
+    null;
 
   useEffect(() => {
     if (!selectedMember) {

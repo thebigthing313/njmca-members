@@ -30,7 +30,7 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { AppError } from '../../domain/app-result';
 import { getMemberDisplayName } from '../../domain/member-access';
@@ -126,17 +126,6 @@ function MembersAdmin() {
   const [formError, setFormError] = useState<AppError | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
-  useEffect(() => {
-    if (canManageMembers) {
-      void refreshMembers();
-    }
-  }, [canManageMembers]);
-
-  const activeCount = useMemo(
-    () => members.filter((member) => member.isActive).length,
-    [members],
-  );
-
   async function refreshMembers() {
     const result = await listManagedMembers();
 
@@ -147,6 +136,15 @@ function MembersAdmin() {
 
     setMembers(result.data);
   }
+
+  useEffect(() => {
+    if (canManageMembers) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount; needs a real data-loading strategy, tracked in #24
+      void refreshMembers();
+    }
+  }, [canManageMembers]);
+
+  const activeCount = members.filter((member) => member.isActive).length;
 
   async function saveMember() {
     if (!dialog) {
@@ -804,6 +802,9 @@ function RoleAssignmentManager() {
   >({});
   const [message, setMessage] = useState<string | null>(null);
 
+  // useCallback stays: it stabilises the identity the effect below depends on,
+  // not render cost. The compiler would memoise it too, but then the effect's
+  // one-shot behaviour would silently hinge on the compiler staying enabled.
   const loadRoleData = useCallback(async () => {
     const result = await getRoleAssignmentAdminData();
 
@@ -820,14 +821,10 @@ function RoleAssignmentManager() {
     void loadRoleData();
   }, [loadRoleData]);
 
-  const sortedAssignments = useMemo(
-    () =>
-      [...(data?.assignments ?? [])].sort((left, right) =>
-        `${left.memberName}${left.roleName}`.localeCompare(
-          `${right.memberName}${right.roleName}`,
-        ),
-      ),
-    [data?.assignments],
+  const sortedAssignments = [...(data?.assignments ?? [])].sort((left, right) =>
+    `${left.memberName}${left.roleName}`.localeCompare(
+      `${right.memberName}${right.roleName}`,
+    ),
   );
 
   async function assignRole() {
