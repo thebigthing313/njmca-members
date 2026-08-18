@@ -24,7 +24,7 @@ type CompleteClaimInput = {
 };
 
 export const requestMemberClaimOtp = createServerFn({ method: 'POST' })
-  .inputValidator((input: ClaimRequestInput) => input)
+  .validator((input: ClaimRequestInput) => input)
   .handler(async ({ data }) => {
     const eligibility = await getClaimEligibility(data.email);
 
@@ -46,7 +46,7 @@ export const requestMemberClaimOtp = createServerFn({ method: 'POST' })
   });
 
 export const verifyMemberClaimOtp = createServerFn({ method: 'POST' })
-  .inputValidator((input: ClaimVerifyInput) => input)
+  .validator((input: ClaimVerifyInput) => input)
   .handler(async ({ data }) => {
     const eligibility = await getClaimEligibility(data.email);
 
@@ -75,7 +75,7 @@ export const verifyMemberClaimOtp = createServerFn({ method: 'POST' })
   });
 
 export const completeMemberClaim = createServerFn({ method: 'POST' })
-  .inputValidator((input: CompleteClaimInput) => input)
+  .validator((input: CompleteClaimInput) => input)
   .handler(async ({ data }) => {
     const headers = getRequestHeaders();
     const session = await auth.api.getSession({ headers });

@@ -52,7 +52,7 @@ export const getOrganizationAdminData = createServerFn({ method: 'GET' }).handle
 );
 
 export const createOrganizationAction = createServerFn({ method: 'POST' })
-  .inputValidator((input: CreateOrganizationInput) => input)
+  .validator((input: CreateOrganizationInput) => input)
   .handler(async ({ data }) => {
     const actor = await requireOrganizationManager();
 
@@ -75,7 +75,7 @@ export const createOrganizationAction = createServerFn({ method: 'POST' })
   });
 
 export const updateOrganizationAction = createServerFn({ method: 'POST' })
-  .inputValidator((input: UpdateOrganizationInput) => input)
+  .validator((input: UpdateOrganizationInput) => input)
   .handler(async ({ data }) => {
     const actor = await requireOrganizationManager();
 
@@ -99,7 +99,7 @@ export const updateOrganizationAction = createServerFn({ method: 'POST' })
   });
 
 export const deleteOrganizationAction = createServerFn({ method: 'POST' })
-  .inputValidator((input: DeleteOrganizationInput) => input)
+  .validator((input: DeleteOrganizationInput) => input)
   .handler(async ({ data }) => {
     const actor = await requireOrganizationManager();
 
@@ -124,7 +124,7 @@ export const deleteOrganizationAction = createServerFn({ method: 'POST' })
 export const updateMemberOrganizationAffiliationsAction = createServerFn({
   method: 'POST',
 })
-  .inputValidator((input: UpdateMemberAffiliationsInput) => input)
+  .validator((input: UpdateMemberAffiliationsInput) => input)
   .handler(async ({ data }) => {
     const actor = await requireOrganizationManager();
 

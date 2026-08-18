@@ -43,7 +43,7 @@ export const listManagedMembers = createServerFn({ method: 'GET' }).handler(
 );
 
 export const createMember = createServerFn({ method: 'POST' })
-  .inputValidator((input: CreateMemberInput) => input)
+  .validator((input: CreateMemberInput) => input)
   .handler(async ({ data }) => {
     const { getCurrentMemberManagementActor } = await import(
       '../server/current-member-actor'
@@ -60,7 +60,7 @@ export const createMember = createServerFn({ method: 'POST' })
   });
 
 export const updateMember = createServerFn({ method: 'POST' })
-  .inputValidator((input: UpdateMemberInput) => input)
+  .validator((input: UpdateMemberInput) => input)
   .handler(async ({ data }) => {
     const { getCurrentMemberManagementActor } = await import(
       '../server/current-member-actor'
@@ -77,7 +77,7 @@ export const updateMember = createServerFn({ method: 'POST' })
   });
 
 export const deactivateMember = createServerFn({ method: 'POST' })
-  .inputValidator((input: MemberIdInput) => input)
+  .validator((input: MemberIdInput) => input)
   .handler(async ({ data }) => {
     const { getCurrentMemberManagementActor } = await import(
       '../server/current-member-actor'
@@ -94,7 +94,7 @@ export const deactivateMember = createServerFn({ method: 'POST' })
   });
 
 export const unlinkMemberUser = createServerFn({ method: 'POST' })
-  .inputValidator((input: MemberIdInput) => input)
+  .validator((input: MemberIdInput) => input)
   .handler(async ({ data }) => {
     const { getCurrentMemberManagementActor } = await import(
       '../server/current-member-actor'

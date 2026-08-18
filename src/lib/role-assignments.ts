@@ -34,7 +34,7 @@ export const getRoleAssignmentAdminData = createServerFn({
 });
 
 export const assignMemberRole = createServerFn({ method: 'POST' })
-  .inputValidator((input: AssignRoleInput) => input)
+  .validator((input: AssignRoleInput) => input)
   .handler(async ({ data }) => {
     const access = await requireManageRoles();
 
@@ -57,7 +57,7 @@ export const assignMemberRole = createServerFn({ method: 'POST' })
   });
 
 export const endMemberRoleAssignment = createServerFn({ method: 'POST' })
-  .inputValidator((input: EndRoleInput) => input)
+  .validator((input: EndRoleInput) => input)
   .handler(async ({ data }) => {
     const access = await requireManageRoles();
 
