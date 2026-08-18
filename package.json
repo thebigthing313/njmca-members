@@ -20,7 +20,7 @@
     "fallow:audit": "fallow audit --base origin/main",
     "fallow:fix": "fallow fix --dry-run",
     "fallow:hooks": "node scripts/dev/install-git-hooks.mjs --force",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "prepare": "node scripts/dev/install-git-hooks.mjs",
     "preview": "node scripts/dev/run-with-local-env.mjs vite preview --host 127.0.0.1 --port 4280",
     "test": "vitest run",

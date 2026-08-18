@@ -49,7 +49,7 @@ export default tseslint.config(
   {
     // Node scripts and this config file. Not linted before the flat-config
     // migration; the eslintrc setup only reached .ts and .tsx.
-    files: ['**/*.{js,mjs}'],
+    files: ['**/*.{js,mjs,cjs}'],
     languageOptions: {
       globals: globals.node,
     },
