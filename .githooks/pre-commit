@@ -4,7 +4,8 @@
 #
 # Adapted from `fallow hooks install --target git`, with two changes: it lives in
 # a tracked directory (wired up by `pnpm install` via the prepare script, or by
-# `pnpm fallow:hooks`) so it survives a fresh clone, and it prefers the local
+# `pnpm fallow:hooks`) so it survives a fresh clone, it resolves the base branch
+# rather than the upstream, and it prefers the local
 # devDependency over a global install. Resolve the binary by path rather than by
 # prepending to PATH, which a Windows drive letter would split on its colon.
 #
@@ -25,13 +26,31 @@ else
   exit 0
 fi
 
-UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
-if [ -n "$UPSTREAM" ]; then
-  # Diff against the merge-base with the upstream so feature branches forked off
-  # a non-default integration branch compare against the right base.
-  BASE="$(git merge-base "$UPSTREAM" HEAD 2>/dev/null || echo "$UPSTREAM")"
-else
-  BASE="main"
+# Audit against the branch this work will merge into, matching what
+# `pnpm fallow:audit` compares against so the two never disagree. Resolving the
+# upstream instead would scope the audit to the last pushed commit once the
+# branch is published, which is a different and narrower question.
+#
+# Override when the integration branch changes -- after go-live, that is develop:
+#   FALLOW_AUDIT_BASE_BRANCH=develop git commit ...
+BASE_BRANCH="${FALLOW_AUDIT_BASE_BRANCH:-main}"
+
+BASE_REF=""
+for candidate in "origin/$BASE_BRANCH" "$BASE_BRANCH"; do
+  if git rev-parse --verify --quiet "$candidate" >/dev/null 2>&1; then
+    BASE_REF="$candidate"
+    break
+  fi
+done
+
+if [ -z "$BASE_REF" ]; then
+  # A single-branch clone or a renamed default branch. Auditing against a ref
+  # that does not resolve exits non-zero and would reject every commit, so skip
+  # instead, the same way a missing binary does.
+  echo "pre-commit: no $BASE_BRANCH or origin/$BASE_BRANCH ref to audit against. Skipping audit." >&2
+  exit 0
 fi
+
+BASE="$(git merge-base "$BASE_REF" HEAD 2>/dev/null || echo "$BASE_REF")"
 
 "$FALLOW" audit --base "$BASE" --quiet --gate-marker pre-commit

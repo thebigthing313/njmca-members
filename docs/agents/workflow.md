@@ -11,6 +11,8 @@ Plan → GitHub issue → branch off main → build + verify locally → pnpm ch
 - Cut every branch from `main`. Every PR targets `main`.
 - There is no `develop` branch yet. After the app goes live, `develop` becomes the
   integration base and `main` becomes the release branch. Do not create it early.
+  Switching means repointing `pnpm fallow:audit` and the pre-commit hook's
+  `FALLOW_AUDIT_BASE_BRANCH` at it too.
 - `main` is not branch-protected. The PR flow is convention, not enforcement, so
   follow it rather than pushing straight to `main`.
 
@@ -111,13 +113,18 @@ configured in `.fallowrc.jsonc`.
 pnpm fallow          # full report: dead code, duplication, health, boundaries
 pnpm fallow:audit    # changed-files gate against origin/main
 pnpm fallow:fix      # preview safe automatic cleanups
-pnpm fallow:hooks    # re-point git at .githooks, if the prepare script did not
+pnpm fallow:hooks    # force git at .githooks, overriding an existing hooksPath
 ```
 
 Two hooks enforce it. `.githooks/pre-commit` runs the changed-files audit; it is
 tracked, and `pnpm install` points `core.hooksPath` at it through the `prepare`
-script. The agent gate in `.claude/settings.json` blocks an agent's `git commit`
-and `git push` until the audit passes. That gate needs `jq` on PATH — without it
+script. If you already have a `core.hooksPath` of your own, the installer leaves
+it alone and says so rather than silently disabling your other hooks — take the
+override with `pnpm fallow:hooks` once you have merged the two. The hook audits
+against `main`; when `develop` arrives, set `FALLOW_AUDIT_BASE_BRANCH=develop`.
+
+The agent gate in `.claude/settings.json` blocks an agent's `git commit` and
+`git push` until the audit passes. That gate needs `jq` on PATH — without it
 the gate prints a notice and skips, so install it (`winget install jqlang.jq`) if
 you want agent commits gated too.
 

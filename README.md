@@ -55,7 +55,8 @@ gh pr create --base main --fill
 
 `pnpm check` must pass before a PR opens. `pnpm install` also points git at the
 tracked `.githooks/` directory, so the fallow pre-commit gate works from a fresh
-clone with no extra setup.
+clone with no extra setup. If you already have your own `core.hooksPath`, the
+installer leaves it in place and tells you how to opt in.
 
 ## Codebase Health
 
