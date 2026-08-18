@@ -47,7 +47,7 @@
         "src/vite-env.d.ts",
         "scripts/**",
         "*.config.ts",
-        ".eslintrc.cjs"
+        "eslint.config.js"
       ]
     }
   },

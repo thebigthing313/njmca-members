@@ -815,6 +815,7 @@ function RoleAssignmentManager() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount; needs a real data-loading strategy, tracked in #24
     void loadRoleData();
   }, [loadRoleData]);
 
