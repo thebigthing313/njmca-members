@@ -49,7 +49,7 @@ function Forbidden() {
             <Typography component="h1" variant="h3">
               Forbidden
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1.5 }}>
+            <Typography color="textSecondary" sx={{ mt: 1.5 }}>
               Your member account does not have permission for that action.
             </Typography>
           </Box>

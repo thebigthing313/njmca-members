@@ -75,7 +75,7 @@ function Login() {
             <Typography component="h1" variant="h3">
               Sign in
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1.5 }}>
+            <Typography color="textSecondary" sx={{ mt: 1.5 }}>
               Use your NJMCA member account.
             </Typography>
           </Box>

@@ -213,10 +213,12 @@ function MembersAdmin() {
     >
       <Stack spacing={3} sx={{ mx: 'auto', width: 'min(100%, 1120px)' }}>
         <Stack
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
           direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
           spacing={2}
+          sx={{
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            justifyContent: 'space-between',
+          }}
         >
           <Box>
             <Typography component="p" variant="overline">
@@ -225,7 +227,7 @@ function MembersAdmin() {
             <Typography component="h1" variant="h3">
               Manage members
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1 }}>
+            <Typography color="textSecondary" sx={{ mt: 1 }}>
               {canManageMembers
                 ? `${getMemberDisplayName(
                     access.member,
@@ -505,15 +507,14 @@ function CsvImportPreviewPanel(props: { onCommitted: () => Promise<void> }) {
       <Stack spacing={3}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
-          justifyContent="space-between"
           spacing={2}
-          sx={{ alignItems: { md: 'center' } }}
+          sx={{ alignItems: { md: 'center' }, justifyContent: 'space-between' }}
         >
           <Box>
             <Typography component="h2" variant="h5">
               CSV import preview
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography color="textSecondary" sx={{ mt: 0.5 }}>
               Stage member and organization changes before commit.
             </Typography>
           </Box>
@@ -533,7 +534,7 @@ function CsvImportPreviewPanel(props: { onCommitted: () => Promise<void> }) {
         </Stack>
 
         {fileName ? (
-          <Typography color="text.secondary" variant="body2">
+          <Typography color="textSecondary" variant="body2">
             {fileName}
           </Typography>
         ) : null}
@@ -715,7 +716,7 @@ function CsvImportPreviewResult(props: {
           Commit import
         </Button>
         {!canCommit ? (
-          <Typography color="text.secondary" variant="body2">
+          <Typography color="textSecondary" variant="body2">
             Resolve blocked and review-required rows before committing.
           </Typography>
         ) : null}
@@ -890,7 +891,7 @@ function RoleAssignmentManager() {
           <Typography component="h2" variant="h5">
             Role assignments
           </Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography color="textSecondary" sx={{ mt: 0.5 }}>
             Assign role terms with optional inclusive start and end dates.
           </Typography>
         </Box>
@@ -944,7 +945,7 @@ function RoleAssignmentManager() {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField
             fullWidth
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
             label="Starts on"
             onChange={(event) => setStartsOn(event.target.value)}
             type="date"
@@ -952,7 +953,7 @@ function RoleAssignmentManager() {
           />
           <TextField
             fullWidth
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
             label="Ends on"
             onChange={(event) => setEndsOn(event.target.value)}
             type="date"
@@ -988,16 +989,16 @@ function RoleAssignmentManager() {
                 sx={{ alignItems: { md: 'center' } }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography fontWeight={700}>
+                  <Typography sx={{ fontWeight: 700 }}>
                     {assignment.memberName}
                   </Typography>
-                  <Typography color="text.secondary" variant="body2">
+                  <Typography color="textSecondary" variant="body2">
                     {assignment.roleName} - {assignment.startsOn ?? 'No start'}{' '}
                     to {assignment.endsOn ?? 'open ended'}
                   </Typography>
                 </Box>
                 <TextField
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                   label="End date"
                   onChange={(event) =>
                     setAssignmentEndDates((current) => ({
@@ -1020,7 +1021,7 @@ function RoleAssignmentManager() {
           ))}
 
           {data && sortedAssignments.length === 0 ? (
-            <Typography color="text.secondary">
+            <Typography color="textSecondary">
               No role assignments yet.
             </Typography>
           ) : null}

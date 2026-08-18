@@ -58,7 +58,7 @@ function Portal() {
             <Typography component="h1" variant="h3">
               {getMemberDisplayName(access.member)}
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1.5 }}>
+            <Typography color="textSecondary" sx={{ mt: 1.5 }}>
               Your BetterAuth identity is linked to an active NJMCA member
               record.
             </Typography>

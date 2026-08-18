@@ -109,7 +109,7 @@ function FirstTimeAccess() {
             <Typography component="h1" variant="h3">
               First-time access
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1.5 }}>
+            <Typography color="textSecondary" sx={{ mt: 1.5 }}>
               Claim the account attached to your NJMCA member email.
             </Typography>
           </Box>

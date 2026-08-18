@@ -83,7 +83,7 @@ function ForgotPassword() {
             <Typography component="h1" variant="h3">
               Reset password
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1.5 }}>
+            <Typography color="textSecondary" sx={{ mt: 1.5 }}>
               Recover your BetterAuth login; member access is still checked when
               you sign in.
             </Typography>
