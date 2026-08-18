@@ -130,8 +130,11 @@ The agent gate in `.claude/settings.json` blocks an agent's `git commit` and
 the gate prints a notice and skips, so install it (`winget install jqlang.jq`) if
 you want agent commits gated too.
 
-Only findings a changeset introduces block the gate, and `pnpm fallow` currently
-reports a clean baseline, so anything it shows you is yours.
+Only findings a changeset introduces block the gate. Dead code, architecture
+boundaries, and private type leaks are clean as of #16, so anything `pnpm fallow`
+reports there is yours. Duplication and complexity still carry an inherited
+baseline — a full `pnpm fallow` run exits non-zero on it — so read those two
+sections against `pnpm fallow:audit`, which attributes findings to your diff.
 
 When fallow flags something, in order of preference: fix it, or suppress the one
 line with `// fallow-ignore-next-line <rule> -- reason`, or change the config if

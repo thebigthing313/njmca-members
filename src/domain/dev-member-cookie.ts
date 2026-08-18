@@ -18,5 +18,14 @@ export function readDevMemberCookieKey(cookieHeader: string) {
     return null;
   }
 
-  return decodeURIComponent(match.slice(devMemberCookieName.length + 1));
+  const value = match.slice(devMemberCookieName.length + 1);
+
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    // A malformed percent sequence throws URIError. This runs on every
+    // protected request in development, so treat an unreadable cookie as no
+    // cookie rather than 500ing the page that would let you clear it.
+    return null;
+  }
 }
