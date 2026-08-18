@@ -29,8 +29,8 @@ import TableRow from '@mui/material/TableRow';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useState } from 'react';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { useState } from 'react';
 
 import type { AppError } from '../../domain/app-result';
 import { getMemberDisplayName } from '../../domain/member-access';
@@ -107,11 +107,67 @@ export const Route = createFileRoute('/admin/members')({
       }),
     };
   },
+  // Either permission alone admits you, so each fetch is gated on the one it
+  // needs. The server functions guard themselves as well; this only avoids
+  // asking for data the page will not render.
+  loader: async ({ context }) => {
+    const { permissions } = context.access;
+
+    const [memberResult, roleResult] = await Promise.all([
+      hasPermission(permissions, permissionKeys.manageMembers)
+        ? listManagedMembers()
+        : null,
+      hasPermission(permissions, permissionKeys.manageRoles)
+        ? getRoleAssignmentAdminData()
+        : null,
+    ]);
+
+    return {
+      ...loadedMembers(memberResult),
+      ...loadedRoleAssignments(roleResult),
+    };
+  },
   component: MembersAdmin,
 });
 
+// The two server functions report failure differently, so each result is
+// unwrapped once here and the component only ever renders.
+type MembersResult = Awaited<ReturnType<typeof listManagedMembers>>;
+type RoleAssignmentsResult = Awaited<
+  ReturnType<typeof getRoleAssignmentAdminData>
+>;
+
+function loadedMembers(result: MembersResult | null): {
+  members: ManagedMember[];
+  membersError: string | null;
+} {
+  if (!result) {
+    return { members: [], membersError: null };
+  }
+
+  return result.ok
+    ? { members: result.data, membersError: null }
+    : { members: [], membersError: result.error.message };
+}
+
+function loadedRoleAssignments(result: RoleAssignmentsResult | null): {
+  roleAssignments: RoleAssignmentAdminData | null;
+  roleAssignmentsError: string | null;
+} {
+  if (!result) {
+    return { roleAssignments: null, roleAssignmentsError: null };
+  }
+
+  return result.ok
+    ? { roleAssignments: result.data, roleAssignmentsError: null }
+    : { roleAssignments: null, roleAssignmentsError: result.message };
+}
+
 function MembersAdmin() {
   const { access } = Route.useRouteContext();
+  const { members, membersError, roleAssignments, roleAssignmentsError } =
+    Route.useLoaderData();
+  const router = useRouter();
   const canManageMembers = hasPermission(
     access.permissions,
     permissionKeys.manageMembers,
@@ -120,31 +176,14 @@ function MembersAdmin() {
     access.permissions,
     permissionKeys.manageRoles,
   );
-  const [members, setMembers] = useState<ManagedMember[]>([]);
   const [dialog, setDialog] = useState<MemberDialogState | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<AppError | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
-  async function refreshMembers() {
-    const result = await listManagedMembers();
-
-    if (!result.ok) {
-      setMessage(result.error.message);
-      return;
-    }
-
-    setMembers(result.data);
-  }
-
-  useEffect(() => {
-    if (canManageMembers) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount; needs a real data-loading strategy, tracked in #24
-      void refreshMembers();
-    }
-  }, [canManageMembers]);
-
   const activeCount = members.filter((member) => member.isActive).length;
+
+  const refresh = () => router.invalidate();
 
   async function saveMember() {
     if (!dialog) {
@@ -173,7 +212,7 @@ function MembersAdmin() {
     }
 
     setDialog(null);
-    await refreshMembers();
+    await refresh();
   }
 
   async function deactivate(member: ManagedMember) {
@@ -185,7 +224,7 @@ function MembersAdmin() {
       return;
     }
 
-    await refreshMembers();
+    await refresh();
   }
 
   async function unlink(member: ManagedMember) {
@@ -197,7 +236,7 @@ function MembersAdmin() {
       return;
     }
 
-    await refreshMembers();
+    await refresh();
   }
 
   return (
@@ -247,6 +286,10 @@ function MembersAdmin() {
             </Button>
           ) : null}
         </Stack>
+
+        {membersError ? (
+          <Alert severity="error">{membersError}</Alert>
+        ) : null}
 
         {message ? (
           <Alert onClose={() => setMessage(null)} severity="error">
@@ -340,10 +383,16 @@ function MembersAdmin() {
         ) : null}
 
         {canManageMembers ? (
-          <CsvImportPreviewPanel onCommitted={refreshMembers} />
+          <CsvImportPreviewPanel onCommitted={refresh} />
         ) : null}
 
-        {canManageRoles ? <RoleAssignmentManager /> : null}
+        {canManageRoles ? (
+          <RoleAssignmentManager
+            data={roleAssignments}
+            loadError={roleAssignmentsError}
+            onChanged={refresh}
+          />
+        ) : null}
       </Stack>
 
       <MemberDialog
@@ -791,8 +840,15 @@ function formatPreviewAction(action: CsvMemberImportPreview['rows'][number]['act
   }
 }
 
-function RoleAssignmentManager() {
-  const [data, setData] = useState<RoleAssignmentAdminData | null>(null);
+function RoleAssignmentManager({
+  data,
+  loadError,
+  onChanged,
+}: Readonly<{
+  data: RoleAssignmentAdminData | null;
+  loadError: string | null;
+  onChanged: () => Promise<void>;
+}>) {
   const [memberId, setMemberId] = useState('');
   const [roleId, setRoleId] = useState('');
   const [startsOn, setStartsOn] = useState('');
@@ -801,25 +857,6 @@ function RoleAssignmentManager() {
     Record<string, string>
   >({});
   const [message, setMessage] = useState<string | null>(null);
-
-  // useCallback stays: it stabilises the identity the effect below depends on,
-  // not render cost. The compiler would memoise it too, but then the effect's
-  // one-shot behaviour would silently hinge on the compiler staying enabled.
-  const loadRoleData = useCallback(async () => {
-    const result = await getRoleAssignmentAdminData();
-
-    if (!result.ok) {
-      setMessage(result.message);
-      return;
-    }
-
-    setData(result.data);
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount; needs a real data-loading strategy, tracked in #24
-    void loadRoleData();
-  }, [loadRoleData]);
 
   const sortedAssignments = [...(data?.assignments ?? [])].sort((left, right) =>
     `${left.memberName}${left.roleName}`.localeCompare(
@@ -851,7 +888,7 @@ function RoleAssignmentManager() {
 
     setStartsOn('');
     setEndsOn('');
-    await loadRoleData();
+    await onChanged();
   }
 
   async function endRole(assignmentId: string) {
@@ -874,7 +911,7 @@ function RoleAssignmentManager() {
       delete next[assignmentId];
       return next;
     });
-    await loadRoleData();
+    await onChanged();
   }
 
   return (
@@ -892,6 +929,8 @@ function RoleAssignmentManager() {
             Assign role terms with optional inclusive start and end dates.
           </Typography>
         </Box>
+
+        {loadError ? <Alert severity="warning">{loadError}</Alert> : null}
 
         {message ? (
           <Alert onClose={() => setMessage(null)} severity="warning">

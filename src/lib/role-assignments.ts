@@ -27,10 +27,21 @@ export const getRoleAssignmentAdminData = createServerFn({
     '../server/role-assignment-repository'
   );
 
-  return {
-    ok: true as const,
-    data: await listRoleAssignmentAdminData(),
-  };
+  // The members route loads this alongside the member table, so a rejected
+  // query would take the whole page down instead of one panel. Sibling readers
+  // such as listManagedMembers already resolve their failures this way.
+  try {
+    return {
+      ok: true as const,
+      data: await listRoleAssignmentAdminData(),
+    };
+  } catch {
+    return {
+      ok: false as const,
+      reason: 'unexpected' as const,
+      message: 'Role assignments could not be loaded.',
+    };
+  }
 });
 
 export const assignMemberRole = createServerFn({ method: 'POST' })

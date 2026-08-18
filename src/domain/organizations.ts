@@ -139,3 +139,24 @@ function normalizeAffiliationTitle(title: string | null) {
 function collapseWhitespace(value: string) {
   return value.trim().replace(/\s+/g, ' ');
 }
+
+export type AffiliationFingerprintInput = {
+  organizationId: string;
+  title: string | null;
+};
+
+// Identifies a member's saved affiliations by content, so a screen holding
+// drafts seeded from them can tell a real change from a reordering. Affiliations
+// arrive ordered by organization name, so renaming one permutes the list without
+// changing what it holds — hence the sort.
+export function memberAffiliationsFingerprint(
+  affiliations: readonly AffiliationFingerprintInput[],
+) {
+  return affiliations
+    .map(
+      (affiliation) =>
+        `${affiliation.organizationId}:${affiliation.title ?? ''}`,
+    )
+    .sort()
+    .join('|');
+}
