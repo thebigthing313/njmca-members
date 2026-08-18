@@ -12,7 +12,7 @@ import {
 import { hasPermission, permissionKeys } from '../domain/permissions';
 
 export const previewMemberCsvImportAction = createServerFn({ method: 'POST' })
-  .inputValidator((input: PreviewMemberCsvImportInput) => input)
+  .validator((input: PreviewMemberCsvImportInput) => input)
   .handler(async ({ data }) => {
     const actor = await requireMemberImportPreviewAccess();
 
@@ -35,7 +35,7 @@ export const previewMemberCsvImportAction = createServerFn({ method: 'POST' })
   });
 
 export const commitMemberCsvImportAction = createServerFn({ method: 'POST' })
-  .inputValidator((input: CommitMemberCsvImportInput) => input)
+  .validator((input: CommitMemberCsvImportInput) => input)
   .handler(async ({ data }) => {
     const actor = await requireMemberImportPreviewAccess();
 
