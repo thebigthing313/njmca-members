@@ -1,0 +1,2 @@
+# Normalize line endings so Windows checkouts do not churn generated files.
+* text=auto eol=lf
