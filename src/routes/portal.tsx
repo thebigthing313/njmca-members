@@ -10,7 +10,7 @@ import { getMemberDisplayName } from '../domain/member-access';
 import { hasPermission, permissionKeys } from '../domain/permissions';
 import { getCurrentMemberAccess } from '../lib/member-context';
 import { requireProtectedRouteAccess } from '../lib/protected-route-guard';
-import { getClearDevMemberCookieHeader } from '../server/dev-member-bypass';
+import { getClearDevMemberCookieHeader } from '../domain/dev-member-cookie';
 
 export const Route = createFileRoute('/portal')({
   beforeLoad: async ({ location }) => {

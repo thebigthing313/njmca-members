@@ -13,7 +13,7 @@ import { authClient } from '../lib/auth-client';
 import {
   getClearDevMemberCookieHeader,
   getDevMemberCookieHeader,
-} from '../server/dev-member-bypass';
+} from '../domain/dev-member-cookie';
 
 export const Route = createFileRoute('/login')({
   component: Login,

@@ -14,7 +14,7 @@ const cliArgs = [
   'auth@latest',
   ...process.argv.slice(2),
   '--config',
-  './src/lib/auth.ts',
+  './src/server/auth.ts',
   '--yes',
 ];
 

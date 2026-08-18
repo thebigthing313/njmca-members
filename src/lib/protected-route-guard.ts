@@ -3,7 +3,7 @@ import { redirect } from '@tanstack/react-router';
 import type { MemberAccess } from '../domain/member-access';
 import { hasPermission, type PermissionKey } from '../domain/permissions';
 
-type RedirectTarget =
+export type RedirectTarget =
   | {
       to: '/login';
       search: { redirect: string };

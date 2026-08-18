@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-type VerificationOtpInput = {
+export type VerificationOtpInput = {
   email: string;
   otp: string;
   type: 'sign-in' | 'email-verification' | 'forget-password' | 'change-email';

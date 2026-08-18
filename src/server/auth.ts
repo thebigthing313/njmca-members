@@ -2,8 +2,8 @@ import { betterAuth } from 'better-auth';
 import { emailOTP } from 'better-auth/plugins';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
 
-import { getDb } from '../server/db';
-import { sendMemberVerificationOtp } from '../server/member-otp';
+import { getDb } from './db';
+import { sendMemberVerificationOtp } from './member-otp';
 
 type AuthSession = {
   user: {

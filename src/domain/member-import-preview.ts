@@ -190,7 +190,7 @@ export function previewMemberCsvImport(
   });
 }
 
-export function createCsvMemberImportPreviewFingerprint(
+function createCsvMemberImportPreviewFingerprint(
   preview: Omit<CsvMemberImportPreview, 'previewFingerprint'>,
 ) {
   return hashString(stableStringify(preview));
