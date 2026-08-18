@@ -945,17 +945,17 @@ function RoleAssignmentManager() {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField
             fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
             label="Starts on"
             onChange={(event) => setStartsOn(event.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
             type="date"
             value={startsOn}
           />
           <TextField
             fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
             label="Ends on"
             onChange={(event) => setEndsOn(event.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
             type="date"
             value={endsOn}
           />
@@ -998,7 +998,6 @@ function RoleAssignmentManager() {
                   </Typography>
                 </Box>
                 <TextField
-                  slotProps={{ inputLabel: { shrink: true } }}
                   label="End date"
                   onChange={(event) =>
                     setAssignmentEndDates((current) => ({
@@ -1007,6 +1006,7 @@ function RoleAssignmentManager() {
                     }))
                   }
                   size="small"
+                  slotProps={{ inputLabel: { shrink: true } }}
                   type="date"
                   value={assignmentEndDates[assignment.id] ?? ''}
                 />
