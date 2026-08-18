@@ -152,7 +152,7 @@ function OrganizationsAdmin() {
           <Typography component="h1" variant="h3">
             Manage organizations
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color="textSecondary">
             {getMemberDisplayName(access.member)} has the{' '}
             {permissionKeys.manageOrganizations} permission.
           </Typography>

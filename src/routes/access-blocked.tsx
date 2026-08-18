@@ -54,14 +54,14 @@ function AccessBlocked() {
             <Typography component="h1" variant="h3">
               Access blocked
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1.5 }}>
+            <Typography color="textSecondary" sx={{ mt: 1.5 }}>
               Your login succeeded, but this account is not linked to an active
               NJMCA member record.
             </Typography>
           </Box>
 
           {access.reason ? (
-            <Typography color="text.secondary">
+            <Typography color="textSecondary">
               Reason: {access.reason}
             </Typography>
           ) : null}
