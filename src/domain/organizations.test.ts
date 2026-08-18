@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ensureOrganizationCanBeDeleted,
   ensureOrganizationNameIsAvailable,
+  memberAffiliationsFingerprint,
   normalizeOrganizationName,
   prepareMemberAffiliations,
   prepareOrganizationName,
@@ -89,5 +90,41 @@ describe('organization domain rules', () => {
       ok: false,
       error: { type: 'conflict' },
     });
+  });
+});
+
+describe('memberAffiliationsFingerprint', () => {
+  const alpha = { organizationId: 'org-alpha', title: 'Delegate' };
+  const beta = { organizationId: 'org-beta', title: null };
+
+  it('ignores the order affiliations arrive in', () => {
+    expect(memberAffiliationsFingerprint([alpha, beta])).toBe(
+      memberAffiliationsFingerprint([beta, alpha]),
+    );
+  });
+
+  it('changes when an organization or a title changes', () => {
+    const base = memberAffiliationsFingerprint([alpha, beta]);
+
+    expect(
+      memberAffiliationsFingerprint([{ ...alpha, title: 'Chair' }, beta]),
+    ).not.toBe(base);
+    expect(
+      memberAffiliationsFingerprint([
+        { ...alpha, organizationId: 'org-gamma' },
+        beta,
+      ]),
+    ).not.toBe(base);
+  });
+
+  it('changes when an affiliation is added or removed', () => {
+    expect(memberAffiliationsFingerprint([alpha])).not.toBe(
+      memberAffiliationsFingerprint([alpha, beta]),
+    );
+    expect(memberAffiliationsFingerprint([])).toBe('');
+  });
+
+  it('treats a null title as empty', () => {
+    expect(memberAffiliationsFingerprint([beta])).toBe('org-beta:');
   });
 });

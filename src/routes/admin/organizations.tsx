@@ -16,6 +16,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { getMemberDisplayName } from '../../domain/member-access';
+import { memberAffiliationsFingerprint } from '../../domain/organizations';
 import { permissionKeys } from '../../domain/permissions';
 import { getCurrentMemberAccess } from '../../lib/member-context';
 import {
@@ -185,7 +186,9 @@ function OrganizationsAdmin() {
 
             {selectedMember ? (
               <MemberAffiliationEditor
-                key={affiliationEditorKey(selectedMember)}
+                key={`${selectedMember.id}|${memberAffiliationsFingerprint(
+                  selectedMember.affiliations,
+                )}`}
                 member={selectedMember}
                 onMessage={setMessage}
                 organizations={resolvedData.organizations}
@@ -429,19 +432,6 @@ function AffiliationDraftRow({
   );
 }
 
-// The drafts are seeded from the member's saved affiliations, so the editor is
-// keyed by them rather than by member id alone: a refetch that changes what the
-// server holds remounts it with fresh drafts, while an unrelated invalidation —
-// creating or renaming an organization — leaves edits in progress alone.
-function affiliationEditorKey(member: MemberAffiliationAdminRecord) {
-  return [
-    member.id,
-    ...member.affiliations.map(
-      (affiliation) =>
-        `${affiliation.organizationId}:${affiliation.title ?? ''}`,
-    ),
-  ].join('|');
-}
 
 
 // Blank rows are the editor's way of offering an empty slot, so they never reach
