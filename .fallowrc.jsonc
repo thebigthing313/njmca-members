@@ -3,11 +3,13 @@
 
   // MUI needs @emotion/styled as a peer even though no file imports it directly,
   // and the Roboto font is pulled in through Vite's `?url` suffix, which the static
-  // graph cannot attribute back to the bare package name.
+  // graph cannot attribute back to the bare package name. typescript-7 is invoked
+  // by path from the typecheck script, so no import ever names it.
   "ignoreDependencies": [
     "@emotion/styled",
     "@fontsource-variable/roboto",
-    "@fontsource-variable/roboto?url"
+    "@fontsource-variable/roboto?url",
+    "typescript-7"
   ],
 
   // The layering the PRD assumes: domain modules stay pure and independently

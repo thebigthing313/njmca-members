@@ -52,6 +52,32 @@ this way here. `corepack pnpm ...` is unaffected either way.
    pnpm dev
    ```
 
+## TypeScript
+
+Two TypeScript versions are installed, deliberately.
+
+- `typescript` (6.x) is the compiler API everything else builds on. ESLint needs
+  it: `typescript-eslint` throws on import under TypeScript 7, whose default
+  export is only a version string. Version 7 does ship an API, but behind
+  `./unstable/*` and not yet in the 6.x shape. The editor's language service
+  reads this copy too.
+- `typescript-7` aliases TypeScript 7, the Go port. `pnpm typecheck` is its only
+  consumer, and it takes a cold `tsc -b` here from roughly 10 seconds to 2.
+
+That script invokes the compiler by path rather than by name, because both
+packages claim the `tsc` bin and the winner of that link is simply whichever one
+pnpm linked last. `pnpm exec tsc` is therefore ambiguous; prefer `pnpm typecheck`.
+
+Lint never type-checks — no type-aware rules are configured, so TypeScript 6 only
+parses. The editor does type-check, though, and it uses 6 while the gate uses 7.
+TypeScript 7 is a reimplementation rather than a recompile, so the two can
+disagree. `pnpm check` is the authority; a clean editor is not a passing build.
+
+Collapse this back to a single `typescript` on plain `tsc` once typescript-eslint
+supports TypeScript 7.1
+([typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)),
+which waits on that `unstable/*` API settling into a stable one.
+
 ## Contributing
 
 Every change follows the same loop: plan, open a GitHub issue, branch off `main`,
