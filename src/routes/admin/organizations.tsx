@@ -64,6 +64,9 @@ function OrganizationsAdmin() {
 
   const data = adminData.ok ? adminData.data : null;
 
+  // useMemo stays: it stabilises the identity the effect below depends on, not
+  // render cost. The compiler would memoise it too, but then the effect would
+  // silently hinge on the compiler staying enabled to avoid re-running forever.
   const selectedMember = useMemo(() => {
     return (
       data?.members.find((member) => member.id === selectedMemberId) ??
