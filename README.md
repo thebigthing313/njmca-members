@@ -12,6 +12,16 @@ Members portal for the New Jersey Mosquito Control Association.
 
 ## Local Setup
 
+This project runs on Node 22 or newer (`.nvmrc` pins the major) and pnpm 11,
+pinned by the `packageManager` field.
+
+If you drive pnpm through a standalone launcher rather than corepack — a
+Chocolatey, Homebrew, or `npm i -g pnpm` install — it must be 11.x or newer.
+pnpm 11 moved its binary and dropped the `bin/` shims that older launchers
+look for when self-switching, so a 10.x launcher fails with
+`Failed to switch pnpm to v11` instead of falling back. `corepack pnpm ...`
+works regardless.
+
 1. Install dependencies.
 
    ```bash
