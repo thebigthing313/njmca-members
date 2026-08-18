@@ -12,7 +12,7 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { getMemberDisplayName } from '../../domain/member-access';
@@ -64,16 +64,10 @@ function OrganizationsAdmin() {
 
   const data = adminData.ok ? adminData.data : null;
 
-  // useMemo stays: it stabilises the identity the effect below depends on, not
-  // render cost. The compiler would memoise it too, but then the effect would
-  // silently hinge on the compiler staying enabled to avoid re-running forever.
-  const selectedMember = useMemo(() => {
-    return (
-      data?.members.find((member) => member.id === selectedMemberId) ??
-      data?.members[0] ??
-      null
-    );
-  }, [data?.members, selectedMemberId]);
+  const selectedMember =
+    data?.members.find((member) => member.id === selectedMemberId) ??
+    data?.members[0] ??
+    null;
 
   useEffect(() => {
     if (!selectedMember) {
