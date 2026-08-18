@@ -74,6 +74,7 @@ function OrganizationsAdmin() {
 
   useEffect(() => {
     if (!selectedMember) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- selection and drafts derived from props, tracked in #24
       setSelectedMemberId('');
       setAffiliationDrafts([]);
       return;
@@ -353,6 +354,7 @@ function OrganizationRow({
   const [name, setName] = useState(organization.name);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resyncs the draft name when the row's organization changes, tracked in #24
     setName(organization.name);
   }, [organization.name]);
 

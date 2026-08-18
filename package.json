@@ -20,7 +20,7 @@
     "fallow:audit": "fallow audit --base origin/main",
     "fallow:fix": "fallow fix --dry-run",
     "fallow:hooks": "node scripts/dev/install-git-hooks.mjs --force",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "prepare": "node scripts/dev/install-git-hooks.mjs",
     "preview": "node scripts/dev/run-with-local-env.mjs vite preview --host 127.0.0.1 --port 4280",
     "test": "vitest run",
@@ -42,23 +42,24 @@
     "resend": "^6.20.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.20.1",
     "@types/pg": "^8.21.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "@typescript-eslint/eslint-plugin": "^7.13.1",
-    "@typescript-eslint/parser": "^7.13.1",
     "@vitejs/plugin-react": "^6.0.5",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-react-refresh": "^0.4.7",
+    "eslint": "^10.8.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.4",
     "fallow": "^3.17.0",
+    "globals": "^17.11.0",
     "typescript": "^5.4.5",
+    "typescript-eslint": "^8.67.0",
     "vite": "^8.2.1",
     "vitest": "^4.1.10"
   },
   "engines": {
-    "node": ">=22.13"
+    "node": "^22.13.0 || >=24.0.0"
   },
   "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }
