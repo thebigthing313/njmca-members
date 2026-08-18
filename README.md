@@ -12,15 +12,16 @@ Members portal for the New Jersey Mosquito Control Association.
 
 ## Local Setup
 
-This project runs on Node 22 or newer (`.nvmrc` pins the major) and pnpm 11,
-pinned by the `packageManager` field.
+This project runs on Node 22.13 or newer and pnpm 11, pinned by the
+`packageManager` field. The Node floor comes from pnpm 11 itself, which
+declares `engines.node: >=22.13`; `.nvmrc` pins the same.
 
 If you drive pnpm through a standalone launcher rather than corepack — a
-Chocolatey, Homebrew, or `npm i -g pnpm` install — it must be 11.x or newer.
-pnpm 11 moved its binary and dropped the `bin/` shims that older launchers
-look for when self-switching, so a 10.x launcher fails with
-`Failed to switch pnpm to v11` instead of falling back. `corepack pnpm ...`
-works regardless.
+Chocolatey, Homebrew, or `npm i -g pnpm` install — upgrade it to match the
+pinned major. An older launcher can fail to self-switch, aborting with
+`Failed to switch pnpm to v11.22.0` and leaving an incomplete install behind
+rather than falling back to what it has. A Chocolatey 10.13.1 launcher failed
+this way here. `corepack pnpm ...` is unaffected either way.
 
 1. Install dependencies.
 
