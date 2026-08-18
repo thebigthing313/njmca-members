@@ -56,10 +56,11 @@ this way here. `corepack pnpm ...` is unaffected either way.
 
 Two TypeScript versions are installed, deliberately.
 
-- `typescript` (6.x) is the JavaScript API. ESLint needs it: `typescript-eslint`
-  throws on import under TypeScript 7, and 7 ships no JS API at all — its `lib/`
-  directory holds only a launcher for a platform-specific Go binary. The editor's
-  language service reads this copy too.
+- `typescript` (6.x) is the compiler API everything else builds on. ESLint needs
+  it: `typescript-eslint` throws on import under TypeScript 7, whose default
+  export is only a version string. Version 7 does ship an API, but behind
+  `./unstable/*` and not yet in the 6.x shape. The editor's language service
+  reads this copy too.
 - `typescript-7` aliases TypeScript 7, the Go port. `pnpm typecheck` is its only
   consumer, and it takes a cold `tsc -b` here from roughly 10 seconds to 2.
 
@@ -67,10 +68,15 @@ That script invokes the compiler by path rather than by name, because both
 packages claim the `tsc` bin and the winner of that link is simply whichever one
 pnpm linked last. `pnpm exec tsc` is therefore ambiguous; prefer `pnpm typecheck`.
 
-Both compilers check the same way — 7.0 is a port of 6.0, and no type-aware lint
-rules are enabled, so TypeScript 6 only ever parses. Drop the alias and put
-`typecheck` back on plain `tsc` once typescript-eslint supports TypeScript 7.1
-([typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)).
+Lint never type-checks — no type-aware rules are configured, so TypeScript 6 only
+parses. The editor does type-check, though, and it uses 6 while the gate uses 7.
+TypeScript 7 is a reimplementation rather than a recompile, so the two can
+disagree. `pnpm check` is the authority; a clean editor is not a passing build.
+
+Collapse this back to a single `typescript` on plain `tsc` once typescript-eslint
+supports TypeScript 7.1
+([typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)),
+which waits on that `unstable/*` API settling into a stable one.
 
 ## Contributing
 
