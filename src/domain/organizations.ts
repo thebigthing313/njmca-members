@@ -126,7 +126,7 @@ export function prepareMemberAffiliations(
   return appSuccess(prepared);
 }
 
-export function normalizeAffiliationTitle(title: string | null) {
+function normalizeAffiliationTitle(title: string | null) {
   if (title === null) {
     return null;
   }

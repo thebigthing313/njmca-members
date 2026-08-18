@@ -5,7 +5,7 @@ import {
   type MemberAccess,
   resolveMemberAccess,
 } from '../domain/member-access';
-import { auth } from '../lib/auth';
+import { auth } from './auth';
 import { resolveDevMemberAccess } from './dev-member-bypass';
 import {
   findEffectivePermissionKeysForMember,

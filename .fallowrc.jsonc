@@ -18,12 +18,18 @@
       { "name": "domain", "patterns": ["src/domain/**"] },
       { "name": "server", "patterns": ["src/server/**"] },
       { "name": "lib", "patterns": ["src/lib/**"] },
+      // API routes are server endpoints that happen to live under src/routes,
+      // so they get their own zone rather than inheriting the UI zone's rules.
+      // Both TanStack spellings count: nested (api/auth/$.ts) and flat
+      // (api.hello.ts). Zones match first-listed-wins, so this precedes routes.
+      { "name": "api", "patterns": ["src/routes/api/**", "src/routes/api.*"] },
       { "name": "routes", "patterns": ["src/routes/**"] }
     ],
     "rules": [
       { "from": "domain", "allow": ["domain"] },
       { "from": "server", "allow": ["domain", "server"] },
       { "from": "lib", "allow": ["domain", "server", "lib"] },
+      { "from": "api", "allow": ["domain", "server", "lib", "api"] },
       {
         "from": "routes",
         "allow": ["routes", "lib", "domain"],
@@ -47,11 +53,8 @@
   },
 
   "rules": {
-    // Two known back-edges predate this config (server/*.ts -> lib/auth,
-    // routes/{login,portal}.tsx -> server/dev-member-bypass). Flip this to
-    // "error" once those files move to the zone they belong in.
-    "boundary-violation": "warn",
-    "private-type-leaks": "warn"
+    "boundary-violation": "error",
+    "private-type-leaks": "error"
   },
 
   "health": {

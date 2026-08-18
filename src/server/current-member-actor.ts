@@ -7,7 +7,7 @@ import {
   findEffectivePermissionKeysForMember,
   findMemberByUserId,
 } from './member-repository';
-import { auth } from '../lib/auth';
+import { auth } from './auth';
 
 export async function getCurrentMemberManagementActor(): Promise<MemberManagementActor | null> {
   const headers = getRequestHeaders();

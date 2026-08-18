@@ -42,7 +42,9 @@ Name branches `<type>/<issue-number>-<slug>` using `feat`, `fix`, `chore`,
 
 - Domain logic under `src/domain/` is test-first and stays pure. The architecture
   zones in `.fallowrc.jsonc` enforce that arrows only point downward:
-  `routes → lib → server → domain`.
+  `routes → lib → server → domain`. API routes under `src/routes/api/` are
+  server endpoints rather than UI, so they get their own zone that may reach
+  `server` directly.
 - Verify against local Postgres and the dev server before opening the PR — see
   [Local verification](#local-verification). Unit tests alone do not cover auth,
   migrations, or permission gating.
@@ -128,17 +130,13 @@ The agent gate in `.claude/settings.json` blocks an agent's `git commit` and
 the gate prints a notice and skips, so install it (`winget install jqlang.jq`) if
 you want agent commits gated too.
 
-Only findings a changeset introduces block the gate. The existing baseline stays
-visible in full `pnpm fallow` runs without holding up unrelated work.
+Only findings a changeset introduces block the gate. Dead code, architecture
+boundaries, and private type leaks are clean as of #16, so anything `pnpm fallow`
+reports there is yours. Duplication and complexity still carry an inherited
+baseline — a full `pnpm fallow` run exits non-zero on it — so read those two
+sections against `pnpm fallow:audit`, which attributes findings to your diff.
 
 When fallow flags something, in order of preference: fix it, or suppress the one
 line with `// fallow-ignore-next-line <rule> -- reason`, or change the config if
 the rule is genuinely wrong for this repo. A suppression without a reason is not
 an answer.
-
-### Known baseline exceptions
-
-`boundary-violation` is set to `warn` because four imports predate the config:
-`src/server/current-member-{access,actor}.ts` reach up into `src/lib/auth.ts`, and
-`src/routes/{login,portal}.tsx` reach into `src/server/dev-member-bypass.ts`. Once
-those files move into the zone they belong in, flip the rule to `error`.

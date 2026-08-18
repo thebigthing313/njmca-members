@@ -8,7 +8,7 @@ import {
   findMembersByNormalizedEmail,
   linkVerifiedMemberClaim,
 } from '../server/member-repository';
-import { auth } from './auth';
+import { auth } from '../server/auth';
 
 type ClaimRequestInput = {
   email: string;
