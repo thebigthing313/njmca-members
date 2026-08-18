@@ -1,0 +1,37 @@
+#!/bin/sh
+# fallow pre-commit gate: dead code, complexity, duplication, and architecture
+# boundaries on the files this commit touches.
+#
+# Adapted from `fallow hooks install --target git`, with two changes: it lives in
+# a tracked directory (wired up by `pnpm install` via the prepare script, or by
+# `pnpm fallow:hooks`) so it survives a fresh clone, and it prefers the local
+# devDependency over a global install. Resolve the binary by path rather than by
+# prepending to PATH, which a Windows drive letter would split on its colon.
+#
+# Audit defaults to gate=new-only, so inherited findings on touched files do not
+# block commits; only findings introduced by the changeset fail the gate. See
+# .fallowrc.jsonc to change that.
+#
+# Bypass on a single commit with: git commit --no-verify
+
+cd "$(git rev-parse --show-toplevel)" || exit 0
+
+if [ -x node_modules/.bin/fallow ]; then
+  FALLOW=node_modules/.bin/fallow
+elif command -v fallow >/dev/null 2>&1; then
+  FALLOW=fallow
+else
+  echo "pre-commit: fallow not found, run pnpm install. Skipping audit." >&2
+  exit 0
+fi
+
+UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+if [ -n "$UPSTREAM" ]; then
+  # Diff against the merge-base with the upstream so feature branches forked off
+  # a non-default integration branch compare against the right base.
+  BASE="$(git merge-base "$UPSTREAM" HEAD 2>/dev/null || echo "$UPSTREAM")"
+else
+  BASE="main"
+fi
+
+"$FALLOW" audit --base "$BASE" --quiet --gate-marker pre-commit

@@ -1,0 +1,71 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+
+  // MUI needs @emotion/styled as a peer even though no file imports it directly,
+  // and the Roboto font is pulled in through Vite's `?url` suffix, which the static
+  // graph cannot attribute back to the bare package name.
+  "ignoreDependencies": [
+    "@emotion/styled",
+    "@fontsource-variable/roboto",
+    "@fontsource-variable/roboto?url"
+  ],
+
+  // The layering the PRD assumes: domain modules stay pure and independently
+  // testable, server owns Postgres and audit writes, lib wires server functions
+  // and auth, routes render. Arrows only ever point downward.
+  "boundaries": {
+    "zones": [
+      { "name": "domain", "patterns": ["src/domain/**"] },
+      { "name": "server", "patterns": ["src/server/**"] },
+      { "name": "lib", "patterns": ["src/lib/**"] },
+      { "name": "routes", "patterns": ["src/routes/**"] }
+    ],
+    "rules": [
+      { "from": "domain", "allow": ["domain"] },
+      { "from": "server", "allow": ["domain", "server"] },
+      { "from": "lib", "allow": ["domain", "server", "lib"] },
+      {
+        "from": "routes",
+        "allow": ["routes", "lib", "domain"],
+        // Routes may name a repository's row types without importing its query code.
+        "allowTypeOnly": ["server"]
+      }
+    ],
+    "coverage": {
+      "requireAllFiles": true,
+      "allowUnmatched": [
+        "src/router.tsx",
+        "src/routeTree.gen.ts",
+        "src/theme.ts",
+        "src/styles.css",
+        "src/vite-env.d.ts",
+        "scripts/**",
+        "*.config.ts",
+        ".eslintrc.cjs"
+      ]
+    }
+  },
+
+  "rules": {
+    // Two known back-edges predate this config (server/*.ts -> lib/auth,
+    // routes/{login,portal}.tsx -> server/dev-member-bypass). Flip this to
+    // "error" once those files move to the zone they belong in.
+    "boundary-violation": "warn",
+    "private-type-leaks": "warn"
+  },
+
+  "health": {
+    "ignore": ["src/routeTree.gen.ts"]
+  },
+
+  "duplicates": {
+    // Repetition in table-driven tests is a feature, not copy-paste to consolidate.
+    "ignore": ["**/*.test.ts"]
+  },
+
+  "audit": {
+    // Only findings this changeset introduces block a commit or a PR; the existing
+    // baseline stays visible in full `pnpm fallow` runs without gating day-to-day work.
+    "gate": "new-only"
+  }
+}

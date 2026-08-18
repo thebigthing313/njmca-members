@@ -1,3 +1,9 @@
+## Development workflow
+
+Every change goes plan → GitHub issue → branch off `main` → PR → code review → squash
+merge, verified against local Postgres and gated by `pnpm check`. See
+`docs/agents/workflow.md` before starting work.
+
 ## Agent skills
 
 ### Issue tracker

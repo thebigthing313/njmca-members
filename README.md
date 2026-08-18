@@ -41,6 +41,34 @@ Members portal for the New Jersey Mosquito Control Association.
    pnpm dev
    ```
 
+## Contributing
+
+Every change follows the same loop: plan, open a GitHub issue, branch off `main`,
+build it, verify against local Postgres, then open a PR for review and squash merge.
+`docs/agents/workflow.md` is the full description; the short version is:
+
+```bash
+git switch -c feat/12-member-directory
+pnpm check                       # lint, typecheck, tests, fallow audit
+gh pr create --base main --fill
+```
+
+`pnpm check` must pass before a PR opens. `pnpm install` also points git at the
+tracked `.githooks/` directory, so the fallow pre-commit gate works from a fresh
+clone with no extra setup.
+
+## Codebase Health
+
+[fallow](https://docs.fallow.tools) watches for dead code, duplication, complexity,
+and architecture drift. `.fallowrc.jsonc` encodes the layering the app assumes:
+`routes → lib → server → domain`, with domain modules staying pure.
+
+- `pnpm fallow`: full report across the whole codebase.
+- `pnpm fallow:audit`: gate the current branch's changes against `origin/main`.
+- `pnpm fallow:fix`: preview safe automatic cleanups.
+
+Only findings a changeset introduces block the gate.
+
 ## Database Workflow
 
 - `pnpm db:local:up`: start local Postgres with Docker Compose.
