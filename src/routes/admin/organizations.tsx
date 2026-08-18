@@ -12,7 +12,7 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { getMemberDisplayName } from '../../domain/member-access';
@@ -57,9 +57,6 @@ function OrganizationsAdmin() {
   const router = useRouter();
   const [newOrganizationName, setNewOrganizationName] = useState('');
   const [selectedMemberId, setSelectedMemberId] = useState('');
-  const [affiliationDrafts, setAffiliationDrafts] = useState<
-    AffiliationDraft[]
-  >([]);
   const [message, setMessage] = useState<string | null>(null);
 
   const data = adminData.ok ? adminData.data : null;
@@ -68,21 +65,6 @@ function OrganizationsAdmin() {
     data?.members.find((member) => member.id === selectedMemberId) ??
     data?.members[0] ??
     null;
-
-  useEffect(() => {
-    if (!selectedMember) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- selection and drafts derived from props, tracked in #24
-      setSelectedMemberId('');
-      setAffiliationDrafts([]);
-      return;
-    }
-
-    if (!selectedMemberId) {
-      setSelectedMemberId(selectedMember.id);
-    }
-
-    setAffiliationDrafts(toAffiliationDrafts(selectedMember));
-  }, [selectedMember, selectedMemberId]);
 
   if (!adminData.ok) {
     return (
@@ -109,33 +91,6 @@ function OrganizationsAdmin() {
 
     setNewOrganizationName('');
     setMessage('Organization created.');
-    await router.invalidate();
-  }
-
-  async function updateMemberAffiliations() {
-    if (!selectedMember) {
-      return;
-    }
-
-    setMessage(null);
-    const result = await updateMemberOrganizationAffiliationsAction({
-      data: {
-        memberId: selectedMember.id,
-        affiliations: affiliationDrafts
-          .filter((affiliation) => affiliation.organizationId)
-          .map((affiliation) => ({
-            organizationId: affiliation.organizationId,
-            title: affiliation.title || null,
-          })),
-      },
-    });
-
-    if (!result.ok) {
-      setMessage(result.error.message);
-      return;
-    }
-
-    setMessage('Member affiliations updated.');
     await router.invalidate();
   }
 
@@ -190,7 +145,7 @@ function OrganizationsAdmin() {
             <Stack spacing={1.5}>
               {resolvedData.organizations.map((organization) => (
                 <OrganizationRow
-                  key={organization.id}
+                  key={`${organization.id}-${organization.name}`}
                   onMessage={setMessage}
                   organization={organization}
                   refresh={() => router.invalidate()}
@@ -228,89 +183,15 @@ function OrganizationsAdmin() {
               ))}
             </TextField>
 
-            {affiliationDrafts.map((affiliation, index) => (
-              <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                key={`${selectedMember?.id ?? 'member'}-${index}`}
-                spacing={1.5}
-              >
-                <TextField
-                  fullWidth
-                  label="Organization"
-                  onChange={(event) =>
-                    setAffiliationDrafts((drafts) =>
-                      drafts.map((draft, draftIndex) =>
-                        draftIndex === index
-                          ? { ...draft, organizationId: event.target.value }
-                          : draft,
-                      ),
-                    )
-                  }
-                  select
-                  value={affiliation.organizationId}
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {resolvedData.organizations.map((organization) => (
-                    <MenuItem key={organization.id} value={organization.id}>
-                      {organization.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  fullWidth
-                  label="Title"
-                  onChange={(event) =>
-                    setAffiliationDrafts((drafts) =>
-                      drafts.map((draft, draftIndex) =>
-                        draftIndex === index
-                          ? { ...draft, title: event.target.value }
-                          : draft,
-                      ),
-                    )
-                  }
-                  value={affiliation.title}
-                />
-                <Tooltip title="Remove row">
-                  <IconButton
-                    aria-label="Remove affiliation row"
-                    onClick={() =>
-                      setAffiliationDrafts((drafts) =>
-                        drafts.filter((_, draftIndex) => draftIndex !== index),
-                      )
-                    }
-                    sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
-                    type="button"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-            ))}
-
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <Button
-                onClick={() =>
-                  setAffiliationDrafts((drafts) => [
-                    ...drafts,
-                    { organizationId: '', title: '' },
-                  ])
-                }
-                startIcon={<AddIcon />}
-                type="button"
-                variant="outlined"
-              >
-                Add affiliation
-              </Button>
-              <Button
-                disabled={!selectedMember}
-                onClick={updateMemberAffiliations}
-                startIcon={<SaveIcon />}
-                type="button"
-                variant="contained"
-              >
-                Save affiliations
-              </Button>
-            </Stack>
+            {selectedMember ? (
+              <MemberAffiliationEditor
+                key={affiliationEditorKey(selectedMember)}
+                member={selectedMember}
+                onMessage={setMessage}
+                organizations={resolvedData.organizations}
+                refresh={() => router.invalidate()}
+              />
+            ) : null}
           </Stack>
         </Paper>
 
@@ -345,15 +226,10 @@ function OrganizationRow({
   refresh,
 }: Readonly<{
   organization: OrganizationRecord;
-  onMessage: (message: string) => void;
+  onMessage: (message: string | null) => void;
   refresh: () => Promise<void>;
 }>) {
   const [name, setName] = useState(organization.name);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- resyncs the draft name when the row's organization changes, tracked in #24
-    setName(organization.name);
-  }, [organization.name]);
 
   async function save() {
     const result = await updateOrganizationAction({
@@ -424,6 +300,160 @@ function OrganizationRow({
   );
 }
 
+function MemberAffiliationEditor({
+  member,
+  onMessage,
+  organizations,
+  refresh,
+}: Readonly<{
+  member: MemberAffiliationAdminRecord;
+  onMessage: (message: string | null) => void;
+  organizations: OrganizationRecord[];
+  refresh: () => Promise<void>;
+}>) {
+  const [drafts, setDrafts] = useState<AffiliationDraft[]>(() =>
+    toAffiliationDrafts(member),
+  );
+
+  async function save() {
+    onMessage(null);
+    const result = await updateMemberOrganizationAffiliationsAction({
+      data: {
+        memberId: member.id,
+        affiliations: toAffiliationPayload(drafts),
+      },
+    });
+
+    if (!result.ok) {
+      onMessage(result.error.message);
+      return;
+    }
+
+    onMessage('Member affiliations updated.');
+    await refresh();
+  }
+
+  return (
+    <>
+      {drafts.map((affiliation, index) => (
+        <AffiliationDraftRow
+          affiliation={affiliation}
+          key={`${member.id}-${index}`}
+          onChange={(patch) =>
+            setDrafts((current) =>
+              current.map((draft, draftIndex) =>
+                draftIndex === index ? { ...draft, ...patch } : draft,
+              ),
+            )
+          }
+          onRemove={() =>
+            setDrafts((current) =>
+              current.filter((_, draftIndex) => draftIndex !== index),
+            )
+          }
+          organizations={organizations}
+        />
+      ))}
+
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+        <Button
+          onClick={() =>
+            setDrafts((current) => [
+              ...current,
+              { organizationId: '', title: '' },
+            ])
+          }
+          startIcon={<AddIcon />}
+          type="button"
+          variant="outlined"
+        >
+          Add affiliation
+        </Button>
+        <Button
+          onClick={save}
+          startIcon={<SaveIcon />}
+          type="button"
+          variant="contained"
+        >
+          Save affiliations
+        </Button>
+      </Stack>
+    </>
+  );
+}
+
+function AffiliationDraftRow({
+  affiliation,
+  onChange,
+  onRemove,
+  organizations,
+}: Readonly<{
+  affiliation: AffiliationDraft;
+  onChange: (patch: Partial<AffiliationDraft>) => void;
+  onRemove: () => void;
+  organizations: OrganizationRecord[];
+}>) {
+  return (
+    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+      <TextField
+        fullWidth
+        label="Organization"
+        onChange={(event) => onChange({ organizationId: event.target.value })}
+        select
+        value={affiliation.organizationId}
+      >
+        <MenuItem value="">None</MenuItem>
+        {organizations.map((organization) => (
+          <MenuItem key={organization.id} value={organization.id}>
+            {organization.name}
+          </MenuItem>
+        ))}
+      </TextField>
+      <TextField
+        fullWidth
+        label="Title"
+        onChange={(event) => onChange({ title: event.target.value })}
+        value={affiliation.title}
+      />
+      <Tooltip title="Remove row">
+        <IconButton
+          aria-label="Remove affiliation row"
+          onClick={onRemove}
+          sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
+          type="button"
+        >
+          <DeleteIcon />
+        </IconButton>
+      </Tooltip>
+    </Stack>
+  );
+}
+
+// The drafts are seeded from the member's saved affiliations, so the editor is
+// keyed by them rather than by member id alone: a refetch that changes what the
+// server holds remounts it with fresh drafts, while an unrelated invalidation —
+// creating or renaming an organization — leaves edits in progress alone.
+function affiliationEditorKey(member: MemberAffiliationAdminRecord) {
+  return [
+    member.id,
+    ...member.affiliations.map(
+      (affiliation) =>
+        `${affiliation.organizationId}:${affiliation.title ?? ''}`,
+    ),
+  ].join('|');
+}
+
+
+// Blank rows are the editor's way of offering an empty slot, so they never reach
+// the server.
+function toAffiliationPayload(drafts: AffiliationDraft[]) {
+  return drafts
+    .filter((affiliation) => affiliation.organizationId)
+    .map((affiliation) => ({
+      organizationId: affiliation.organizationId,
+      title: affiliation.title || null,
+    }));
+}
 function toAffiliationDrafts(member: MemberAffiliationAdminRecord) {
   const drafts = member.affiliations.map((affiliation) => ({
     organizationId: affiliation.organizationId,
